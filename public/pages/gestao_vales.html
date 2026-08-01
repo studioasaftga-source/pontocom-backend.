@@ -1,0 +1,202 @@
+<div class="titulo-pagina">
+    <h2>💸 Gestão de Adiantamentos (Vales)</h2>
+</div>
+
+<div class="card">
+    <table class="tabela">
+        <thead>
+            <tr>
+                <th>Colaborador</th>
+                <th>Data</th>
+                <th>Valor Solicitado</th>
+                <th>Motivo</th>
+                <th>Chave PIX</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-vales-corpo">
+            <tr>
+                <td colspan="6" style="text-align: center; color: #94a3b8;">Carregando solicitações...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    (function() {
+        const URL_API = '/api'; 
+        let WPP_DONO = ""; 
+
+        // Força a chamada do aplicativo nativo (Desktop ou Mobile)
+        // No PC, o navegador perguntará uma vez se pode abrir o WhatsApp. Marque "Sempre permitir".
+        const urlBaseWhatsapp = 'whatsapp://send';
+
+        // 1. Busca o WhatsApp do Financeiro salvo em Configurações
+        async function carregarWhatsappFinanceiro() {
+            try {
+                const res = await fetch(`${URL_API}/configuracoes`); 
+                const dados = await res.json();
+                
+                if (dados && dados.whatsapp_financeiro) {
+                    const apenasNumeros = dados.whatsapp_financeiro.replace(/\D/g, '');
+                    if (apenasNumeros.startsWith('55') && apenasNumeros.length >= 12) {
+                        WPP_DONO = apenasNumeros;
+                    } else {
+                        WPP_DONO = '55' + apenasNumeros;
+                    }
+                } else {
+                    WPP_DONO = ""; 
+                }
+            } catch (e) {
+                console.error("Erro ao carregar WhatsApp:", e);
+                WPP_DONO = "";
+            }
+        }
+
+        // 2. Busca e renderiza os vales pendentes
+        async function carregarValesPendentes() {
+            const tbody = document.getElementById('tabela-vales-corpo');
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${URL_API}/vale/pendentes`);
+                const data = await res.json();
+                
+                if (!Array.isArray(data)) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="color: #f43f5e; text-align: center;">Erro interno no servidor (500).</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma solicitação pendente no momento.</td></tr>';
+                    return;
+                }
+
+                data.forEach(vale => {
+                    // Puxando o nome correto do backend (funcionario_nome)
+                    const nomeDoFuncionario = vale.funcionario_nome || vale.nome || 'Nome não encontrado';
+                    
+                    const dataFormatada = new Date(vale.data_solicitacao).toLocaleDateString('pt-BR');
+                    const valorFormat = Number(vale.valor).toFixed(2).replace('.', ',');
+                    const pix = vale.pix || vale.chave_pix || 'Não cadastrada';
+                    const telefone = vale.telefone || '';
+
+                    tbody.innerHTML += `
+                        <tr id="linha-vale-${vale.id}">
+                            <td><strong>${nomeDoFuncionario}</strong></td>
+                            <td>${dataFormatada}</td>
+                            <td style="color: #10b981; font-weight: bold;">R$ ${valorFormat}</td>
+                            <td>${vale.justificativa || '--'}</td>
+                            <td>${pix}</td>
+                            <td id="acoes-vale-${vale.id}">
+                                <div style="display: flex; gap: 5px; flex-direction: column;">
+                                    <button onclick="window.aprovarValeRH(${vale.id}, '${nomeDoFuncionario}', '${valorFormat}', '${pix}', '${telefone}')" style="background-color: #10b981; color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Aprovar</button>
+                                    <button onclick="window.recusarValeRH(${vale.id})" style="background-color: #f43f5e; color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Recusar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (erro) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color: #f43f5e; text-align: center;">Erro ao conectar com o servidor.</td></tr>';
+            }
+        }
+
+        // 3. Ação de Aprovação com Emojis blindados e Link Direto
+        window.aprovarValeRH = async function(id, nome, valor, pix, telColab) {
+            if(!confirm(`Aprovar o vale de R$ ${valor} para ${nome}?`)) return;
+
+            try {
+                // Atualizado para a nova rota unificada /responder
+                const res = await fetch(`${URL_API}/vale/responder`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vale_id: id, status: 'Aprovado' })
+                });
+                const data = await res.json();
+
+                if(res.ok) {
+                    const eParty = "\u{1F389}"; 
+                    const eUser  = "\u{1F464}"; 
+                    const eMoney = "\u{1F4B8}"; 
+                    const eKey   = "\u{1F511}"; 
+                    const eRocket= "\u{1F680}"; 
+                    const eJoy   = "\u{0001F973}"; 
+                    const eBag   = "\u{1F4B0}"; 
+                    const ePin   = "\u{1F4CC}"; 
+
+                    const textoDono = `${eParty} *Novo Vale Aprovado pelo RH!* ${eParty}\n\n` +
+                                      `${eUser} *Colaborador:* ${nome}\n` +
+                                      `${eMoney} *Valor:* R$ ${valor}\n` +
+                                      `${eKey} *Chave PIX:* ${pix}\n\n` +
+                                      `${eRocket} *Status:* Aguardando transferência financeira.`;
+
+                    const textoColab = `${eJoy} *Oba, ${nome}! Seu vale foi APROVADO!*\n\n` +
+                                       `${eBag} *Valor:* R$ ${valor}\n` +
+                                       `${ePin} *Forma de Envio:* PIX (${pix})\n\n` +
+                                       `O pagamento será realizado em breve. Tenha um ótimo dia! ${eRocket}`;
+
+                    const paramsDono = new URLSearchParams({ phone: WPP_DONO, text: textoDono }).toString();
+                    const linkDono = WPP_DONO ? `${urlBaseWhatsapp}?${paramsDono}` : '#';
+
+                    let linkColab = '#';
+                    if (telColab) {
+                        const telFormatado = '55' + telColab.replace(/\D/g, '');
+                        const paramsColab = new URLSearchParams({ phone: telFormatado, text: textoColab }).toString();
+                        linkColab = `${urlBaseWhatsapp}?${paramsColab}`;
+                    }
+
+                    const celula = document.getElementById(`acoes-vale-${id}`);
+                    celula.innerHTML = `
+                        <span style="color: #10b981; font-size: 12px; font-weight: bold;">APROVADO</span>
+                        ${WPP_DONO 
+                            ? `<a href="${linkDono}" target="_blank" style="background-color: #25D366; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px;">📲 Notificar Financeiro</a>` 
+                            : `<span style="font-size: 10px; color: orange; display: block; margin-top: 4px;">Cadastre o tel. em Configurações</span>`}
+                        ${telColab ? `<a href="${linkColab}" target="_blank" style="background-color: #38bdf8; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px;">📲 Notificar Colab</a>` : ''}
+                    `;
+                } else {
+                    alert("Erro ao aprovar: " + (data.erro || "Desconhecido"));
+                }
+            } catch(e) { alert("Erro de conexão."); }
+        };
+
+        // 4. Ação de Recusa com Motivo Obrigatório
+        window.recusarValeRH = async function(id) {
+            const motivo = prompt("Motivo da recusa (obrigatório para o funcionário ver):");
+            
+            if (motivo === null || motivo.trim() === "") {
+                alert("Ação cancelada: É obrigatório informar um motivo ao recusar o vale.");
+                return;
+            }
+
+            try {
+                // Atualizado para a nova rota unificada /responder passando a justificativa do RH
+                const res = await fetch(`${URL_API}/vale/responder`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        vale_id: id, 
+                        status: 'Recusado',
+                        resposta_rh: motivo 
+                    })
+                });
+                
+                if(res.ok) {
+                    document.getElementById(`linha-vale-${id}`).remove();
+                } else {
+                    const data = await res.json();
+                    alert("Erro ao recusar: " + (data.erro || "Erro desconhecido"));
+                }
+            } catch(e) { 
+                alert("Erro ao recusar. Verifique a conexão."); 
+            }
+        };
+
+        carregarWhatsappFinanceiro().then(() => {
+            carregarValesPendentes();
+        });
+    })();
+</script>
+<script src="../js/gestao_vales.js"></script>

@@ -1,0 +1,95 @@
+:root {
+    /* COR DA EMPRESA (ALIMENTADA PELO BANCO DE DADOS) */
+    --cor-primaria: #CE9178;
+    --cor-primaria-hover: #D19A82;
+
+    /* FUNDOS */
+    --cor-header: #1E1E1E;
+    --cor-menu: #252526;
+    --cor-menu-hover: #2D2D30;
+    --cor-fundo: #F3F3F3;
+    --cor-card: #FFFFFF;
+
+    /* TEXTO */
+    --cor-texto: #252526;
+    --cor-texto-claro: #FFFFFF;
+    --cor-texto-secundario: #6A6A6A;
+
+    /* STATUS */
+    --cor-sucesso: #6A9955;
+    --cor-sucesso-fundo: #EAF6E5;
+
+    --cor-aviso: #CE9178;
+    --cor-aviso-fundo: #FFF4EF;
+
+    --cor-erro: #C74E39;
+    --cor-erro-fundo: #FDEEEE;
+
+    --cor-info: #569CD6;
+
+    /* BORDAS E ESTRUTURA */
+    --cor-borda: #DDDDDD;
+    --sombra-card: 0 5px 20px rgba(0,0,0,.08);
+    --radius: 12px;
+    --transition: .25s;
+    /* =========================================
+   ESTILOS PADRONIZADOS DO MODAL (PWA)
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6); /* Fundo escuro semitransparente */
+    backdrop-filter: blur(3px); /* Efeito de desfoque moderno (vidro) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999; /* Fica por cima de tudo */
+}
+
+.modal-content {
+    /* Puxa as variáveis do seu tema atual (modo claro/escuro) */
+    background-color: var(--bg-card, #ffffff); 
+    color: var(--text-color, #333333);
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    padding: 20px;
+    animation: abrirModal 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+    padding-bottom: 12px;
+    margin-bottom: 15px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.btn-fechar {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-color, #333);
+}
+
+.btn-fechar:hover {
+    color: red;
+}
+
+/* Animação suave para o modal pular na tela */
+@keyframes abrirModal {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+}

@@ -1,0 +1,76 @@
+<div class="conteudo">
+    <div class="titulo-pagina">
+        <h2>Gestão de Cargos</h2>
+    </div>
+
+    <!-- FORMULÁRIO DE CADASTRO -->
+    <div class="card">
+        <h2>Adicionar Novo Cargo</h2>
+        <form id="formCargo" onsubmit="salvarCargo(event)" class="form-grid">
+            
+            <div class="campo">
+                <label for="nomeCargo">Nome Interno do Cargo *</label>
+                <input type="text" id="nomeCargo" placeholder="Ex: Analista de Suporte Júnior" required>
+                <small>Como a empresa chama o cargo no dia a dia.</small>
+            </div>
+
+            <div class="campo">
+                <label for="cboCargo">CBO Oficial (eSocial) *</label>
+                <!-- O datalist agora está vazio, o JavaScript vai preencher automaticamente -->
+                <input type="text" id="cboCargo" list="listaCBO" placeholder="Digite o código ou nome da ocupação..." required>
+                <datalist id="listaCBO"></datalist>
+                <small>Classificação Brasileira de Ocupações.</small>
+            </div>
+
+            <!-- CAMPOS DE JORNADA DE TRABALHO -->
+            <div class="campo">
+                <label for="horaEntrada">Horário de Entrada *</label>
+                <input type="time" id="horaEntrada" required>
+            </div>
+
+            <div class="campo">
+                <label for="horaSaidaAlmoco">Saída para Almoço *</label>
+                <input type="time" id="horaSaidaAlmoco" required>
+            </div>
+
+            <div class="campo">
+                <label for="horaRetornoAlmoco">Retorno do Almoço *</label>
+                <input type="time" id="horaRetornoAlmoco" required>
+            </div>
+
+            <div class="campo">
+                <label for="horaSaida">Horário de Saída *</label>
+                <input type="time" id="horaSaida" required>
+            </div>
+
+            <div class="campo" style="grid-column: span 2;">
+                <label for="cargaHoraria">Carga Horária Semanal *</label>
+                <input type="text" id="cargaHoraria" placeholder="Ex: 44 horas" required>
+            </div>
+
+            <div class="campo" style="grid-column: span 2;">
+                <button type="submit" class="btn-principal" style="width: 200px; padding: 10px; cursor: pointer;">💾 Salvar Cargo</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABELA DE CARGOS CADASTRADOS -->
+    <div class="card" style="margin-top: 20px;">
+        <h2>Cargos Cadastrados</h2>
+        <table class="tabela">
+            <thead>
+                <tr>
+                    <th>Nome Interno</th>
+                    <th>Código CBO Oficial</th>
+                    <th>Carga Horária</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCargosBody">
+                <tr>
+                    <td colspan="4">Carregando cargos...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

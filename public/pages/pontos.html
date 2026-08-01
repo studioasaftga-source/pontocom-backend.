@@ -1,0 +1,203 @@
+<style>
+    /* Estilos Modernos para a Tela de Ponto */
+    .ponto-container {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        padding: 20px;
+    }
+
+    .card-filtro-ponto {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        border: 1px solid #eaeaea;
+    }
+
+    .card-filtro-ponto h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        font-size: 1.4rem;
+        font-weight: 600;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .form-group label {
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        padding: 10px 15px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        background-color: #fcfcfc;
+    }
+
+    .form-control:focus {
+        border-color: #4a90e2;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        background-color: #ffffff;
+    }
+
+    .btn-buscar {
+        background-color: #007bff;
+        color: white;
+        padding: 11px 25px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.1s;
+        height: 44px; /* Alinhado com a altura dos inputs */
+    }
+
+    .btn-buscar:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-buscar:active {
+        transform: translateY(1px);
+    }
+
+    .tabela-ponto-wrapper {
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+        border: 1px solid #eaeaea;
+    }
+
+    .tabela-ponto {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+    .tabela-ponto thead {
+        background-color: #343a40; /* Cinza escuro elegante */
+        color: #ffffff;
+    }
+
+    .tabela-ponto th {
+        padding: 16px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+
+    .tabela-ponto td {
+        padding: 14px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #444;
+        font-size: 0.95rem;
+    }
+
+    .tabela-ponto tbody tr {
+        transition: background-color 0.2s;
+    }
+
+    .tabela-ponto tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .tabela-ponto tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Estilo do botão que vai dentro da tabela (vamos usar no JS) */
+    .btn-ajustar {
+        background-color: #f39c12;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.85rem;
+        transition: background-color 0.2s;
+    }
+
+    .btn-ajustar:hover {
+        background-color: #d68910;
+    }
+</style>
+
+<div class="ponto-container">
+    <!-- Filtros de Busca -->
+    <div class="card-filtro-ponto">
+        <h3>Controle de Ponto - Espelho Mensal</h3>
+        <div class="form-row">
+            
+            <!-- Selecionar Funcionário -->
+            <div class="form-group" style="flex: 2;">
+                <label for="selectFuncionario">Funcionário:</label>
+                <select id="selectFuncionario" class="form-control">
+                    <option value="">Selecione um funcionário...</option>
+                    <!-- Preenchido via JavaScript -->
+                </select>
+            </div>
+
+            <!-- Selecionar Mês e Ano -->
+            <div class="form-group" style="flex: 1;">
+                <label for="inputMesAno">Mês/Ano:</label>
+                <input type="month" id="inputMesAno" class="form-control">
+            </div>
+
+            <!-- Botão de Busca -->
+            <div style="display: flex; align-items: flex-end; margin-bottom: 2px;">
+                <button id="btnBuscarPonto" class="btn-buscar">
+                    Buscar Espelho
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Tabela do Espelho de Ponto -->
+    <div class="tabela-ponto-wrapper">
+        <table class="tabela-ponto">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Batida 1 (Entrada)</th>
+                    <th>Batida 2 (Saída Almoço)</th>
+                    <th>Batida 3 (Volta Almoço)</th>
+                    <th>Batida 4 (Saída)</th>
+                    <th>Ações do RH</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabelaPonto">
+                <tr>
+                    <td colspan="6" style="padding: 40px; color: #888; font-style: italic;">
+                        Selecione um funcionário e o mês acima para carregar os pontos.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="/js/tema.js"></script>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PontoCom RH - Dashboard</title>
+    <link rel="stylesheet" href="css/tema.css">
+    <link rel="stylesheet" href="css/estilo.css">
+    
+    <!-- FAVICONS E ÍCONES DAS ABAS -->
+    <link rel="shortcut icon" href="/imagens/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="96x96" href="/imagens/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/imagens/favicon.svg">
+
+    <!-- CONFIGURAÇÕES PWA (Manifest e Cores) -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0056b3">
+
+    <!-- Suporte PWA para Android e iPhone (iOS) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EspelhoPonto">
+    <link rel="apple-touch-icon" href="/imagens/apple-touch-icon.png">
+</head>
+
+<body>
+
+    <header>
+        <h1>Ponto<span>Com</span> RH</h1>
+    </header>
+
+    <div class="container">
+
+        <!-- MENU FIXO -->
+        <div class="menu">
+            <a href="#" class="ativo" onclick="abrirDashboard(this)">
+                🏠 Dashboard
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/funcionarios.html', this)">
+                👥 Funcionários
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/controle_ponto.html', this)">
+                🛡️ Controle de Ponto (RH)
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/cargos.html', this)">
+                💼 Cargos
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/empresa.html', this)">
+                🏢 Empresa
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/pontos.html', this)">
+                🕒 Espelho de Ponto
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/rh.html', this)">
+                📅 Fechamento de Ponto
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/folha.html', this)">
+                💰 Folha de Pagamento
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/holerites.html', this)">
+                📄 Holerites
+            </a>
+
+            <!-- NOVO MENU: GESTÃO DE VALES -->
+            <a href="#" onclick="carregarPagina('pages/gestao_vales.html', this)">
+                💸 Gestão de Vales
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/relatorios.html', this)">
+                📊 Relatórios
+            </a>
+
+            <a href="#" onclick="carregarPagina('pages/configuracoes.html', this)">
+                ⚙ Configurações
+            </a>
+        </div>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="conteudo">
+
+            <div class="titulo-pagina">
+                <h2>Dashboard</h2>
+            </div>
+
+            <div class="card">
+                <h2>Olá, Administrador 👋</h2>
+                <p>Bem-vindo ao painel de gestão do PontoCom RH.</p>
+            </div>
+
+            <div class="form-grid">
+                <div class="card">
+                    <h2>👥</h2>
+                    <h3 id="totalFuncionarios">0</h3>
+                    <p>Funcionários ativos</p>
+                </div>
+                <div class="card">
+                    <h2>🕒</h2>
+                    <h3 id="totalPontos">0</h3>
+                    <p>Batidas hoje</p>
+                </div>
+                <div class="card">
+                    <h2>📅</h2>
+                    <h3 id="totalFechamentos">0</h3>
+                    <p>Fechamentos</p>
+                </div>
+                <div class="card">
+                    <h2>⚠</h2>
+                    <h3 id="totalAlertas">0</h3>
+                    <p>Funcionários sem ponto</p>
+                </div>
+            </div>
+
+            <!-- ÚLTIMAS BATIDAS -->
+            <div class="card">
+                <h2>🕒 Últimas batidas</h2>
+                <table class="tabela">
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Tipo</th>
+                            <th>Horário</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaPontos">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- FUNCIONÁRIOS SEM BATIDA -->
+            <div class="card">
+                <h2>⚠ Funcionários sem batida hoje</h2>
+                <table class="tabela">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Cargo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaSemBatida">
+                    </tbody>
+                </table>
+            </div>
+
+        </div> <!-- fecha conteudo -->
+    </div> <!-- fecha container -->
+
+    <!-- ========================================== -->
+    <!-- SCRIPTS GLOBAIS DO SISTEMA                 -->
+    <!-- ========================================== -->
+    
+    <!-- 1. Importa as funções dos módulos -->
+    <script src="js/funcionarios.js"></script>
+    <script src="js/cargos.js"></script>
+    <script src="js/pontos.js"></script>
+    <script src="js/controle_ponto.js"></script>
+    <script src="js/rh.js"></script>
+
+    <!-- 2. Motor de navegação (SPA) e Dashboard -->
+    <script>
+        let intervalDashboard = null;
+        const htmlDashboardOriginal = document.querySelector('.conteudo').innerHTML;
+
+        // FUNÇÃO DE NAVEGAÇÃO ENTRE TELAS
+        async function carregarPagina(url, elementoLink) {
+            if (intervalDashboard) {
+                clearInterval(intervalDashboard);
+                intervalDashboard = null;
+            }
+
+            atualizarMenuAtivo(elementoLink);
+
+            try {
+                const resposta = await fetch(url);
+                if (!resposta.ok) throw new Error("Página não encontrada");
+                
+                const html = await resposta.text();
+                const containerConteudo = document.querySelector('.conteudo');
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const novoConteudo = doc.querySelector('.conteudo');
+
+                if (novoConteudo) {
+                    containerConteudo.innerHTML = novoConteudo.innerHTML;
+                } else {
+                    containerConteudo.innerHTML = html;
+                }
+
+                // ========================================================
+                // GARANTIR EXECUÇÃO DE SCRIPTS INJETADOS (Para Gestão de Vales)
+                // ========================================================
+                const scripts = containerConteudo.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+
+                // ===== INICIA AS FUNÇÕES DA TELA CARREGADA =====
+                if (url.includes('funcionarios.html')) {
+                    if (typeof carregarCargosSelect === 'function') carregarCargosSelect();
+                    if (typeof carregarFuncionarios === 'function') carregarFuncionarios();
+                }
+                if (url.includes('controle_ponto.html')) {
+                    if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
+                    if (typeof carregarFuncionariosSelect === 'function') carregarFuncionariosSelect();
+                }
+                if (url.includes('cargos.html')) {
+                    if (typeof carregarListaCargos === 'function') carregarListaCargos();
+                    if (typeof carregarListaCBOs === 'function') carregarListaCBOs();
+                }
+                if (url.includes('pontos.html')) {
+                    if (typeof inicializarTelaPonto === 'function') inicializarTelaPonto();
+                }
+                if (url.includes('rh.html')) {
+                    const hoje = new Date();
+                    const selectMes = document.getElementById("selectMes");
+                    const selectAno = document.getElementById("selectAno");
+                    if(selectMes) selectMes.value = hoje.getMonth() + 1;
+                    if(selectAno) selectAno.value = hoje.getFullYear();
+                }
+                // Adicionado chamada para Gestão de Vales, caso a função fique no escopo global
+                if (url.includes('gestao_vales.html')) {
+                    if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
+                }
+
+            } catch (erro) {
+                console.error("Erro ao carregar a página:", erro);
+                document.querySelector('.conteudo').innerHTML = `
+                    <div class="card">
+                        <h2>⚠️ Página em construção</h2>
+                        <p>Não foi possível carregar o arquivo: <strong>${url}</strong></p>
+                    </div>
+                `;
+            }
+        }
+
+        // VOLTAR PARA O DASHBOARD
+        function abrirDashboard(elementoLink) {
+            atualizarMenuAtivo(elementoLink);
+            document.querySelector('.conteudo').innerHTML = htmlDashboardOriginal;
+            carregarDashboard();
+            if (!intervalDashboard) {
+                intervalDashboard = setInterval(carregarDashboard, 10000);
+            }
+        }
+
+        // DESTAQUE NO MENU
+        function atualizarMenuAtivo(elementoLink) {
+            if (!elementoLink) return;
+            const links = document.querySelectorAll('.menu a');
+            links.forEach(link => link.classList.remove('ativo'));
+            elementoLink.classList.add('ativo');
+        }
+
+        // DADOS DO DASHBOARD VIA API
+        async function carregarDashboard(){
+            try {
+                const resposta = await fetch("/api/rh/dashboard");
+                const dados = await resposta.json();
+
+                const totalFuncionarios = document.getElementById("totalFuncionarios");
+                if(totalFuncionarios) totalFuncionarios.innerText = dados.funcionarios || 0;
+
+                const totalPontos = document.getElementById("totalPontos");
+                if(totalPontos) totalPontos.innerText = dados.batidasHoje || 0;
+
+                const totalFechamentos = document.getElementById("totalFechamentos");
+                if(totalFechamentos) totalFechamentos.innerText = dados.fechamentos || 0;
+
+                const totalAlertas = document.getElementById("totalAlertas");
+                if(totalAlertas) totalAlertas.innerText = dados.semBatidaHoje?.length || 0;
+
+                const tabelaPontos = document.getElementById("listaPontos");
+                if(tabelaPontos){
+                    tabelaPontos.innerHTML = "";
+                    if(dados.ultimasBatidas && dados.ultimasBatidas.length){
+                        dados.ultimasBatidas.forEach(p => {
+                            tabelaPontos.innerHTML += `
+                                <tr>
+                                    <td>${p.nome || ""}</td>
+                                    <td>${p.tipo_registro || ""}</td>
+                                    <td>${p.hora_entrada || "--"}</td>
+                                    <td><span class="status status-ativo">${p.status_validacao || "REGISTRADO"}</span></td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tabelaPontos.innerHTML = `<tr><td colspan="4">Nenhuma batida encontrada</td></tr>`;
+                    }
+                }
+
+                const tabelaSemBatida = document.getElementById("listaSemBatida");
+                if(tabelaSemBatida){
+                    tabelaSemBatida.innerHTML = "";
+                    if(dados.semBatidaHoje && dados.semBatidaHoje.length){
+                        dados.semBatidaHoje.forEach(f => {
+                            tabelaSemBatida.innerHTML += `
+                                <tr>
+                                    <td>${f.nome}</td>
+                                    <td>${f.cargo || "Sem cargo"}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tabelaSemBatida.innerHTML = `<tr><td colspan="2">Todos registraram ponto</td></tr>`;
+                    }
+                }
+            } catch(erro){
+                console.error("Erro dashboard:", erro);
+            }
+        }
+
+        // Inicia o Dashboard ao abrir o sistema
+        carregarDashboard();
+        intervalDashboard = setInterval(carregarDashboard, 10000);
+    </script>
+</body>
+</html>

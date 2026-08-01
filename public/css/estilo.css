@@ -1,0 +1,1564 @@
+/* ===================================
+   PONTOCOM RH
+   TEMA PROFISSIONAL
+   PRETO + CINZA + LARANJA FOSCO
+=================================== */
+
+
+/* ===============================
+   CORES DO SISTEMA
+================================ */
+
+:root{
+
+
+    --cor-primaria:#CE9178;
+
+    --cor-primaria-hover:#D19A82;
+
+
+
+    --cor-header:#1E1E1E;
+
+    --cor-menu:#252526;
+
+    --cor-menu-hover:#333333;
+
+
+
+    --cor-fundo:#F3F3F3;
+
+    --cor-card:#FFFFFF;
+
+
+
+    --cor-texto:#252526;
+
+    --cor-texto-claro:#FFFFFF;
+
+    --cor-texto-secundario:#858585;
+
+
+
+    --cor-sucesso:#6A9955;
+
+    --cor-sucesso-fundo:#EAF6E5;
+
+
+
+    --cor-info:#569CD6;
+
+
+
+    --cor-erro:#C74E39;
+
+    --cor-erro-fundo:#FDEEEE;
+
+
+
+    --cor-aviso-fundo:#FFF4EF;
+
+
+
+    --cor-borda:#D4D4D4;
+
+
+
+    --radius:16px;
+
+    --transition:.25s;
+
+
+}
+
+
+
+/* ===============================
+RESET
+================================ */
+
+
+*{
+
+
+    margin:0;
+
+    padding:0;
+
+    box-sizing:border-box;
+
+    font-family:"Segoe UI",Arial,sans-serif;
+
+
+}
+
+
+
+/* ===============================
+BODY
+================================ */
+
+
+body{
+
+
+    background:var(--cor-fundo);
+
+    color:var(--cor-texto);
+
+
+}
+
+
+
+/* ===============================
+HEADER
+================================ */
+
+
+header{
+
+
+    height:70px;
+
+
+    background:
+
+    linear-gradient(
+
+        90deg,
+
+        #1E1E1E,
+
+        #252526
+
+    );
+
+
+    color:white;
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    padding:0 30px;
+
+
+    box-shadow:
+
+    0 5px 20px rgba(0,0,0,.25);
+
+
+
+}
+
+
+
+header h1{
+
+
+    font-size:26px;
+
+    font-weight:700;
+
+
+}
+
+
+
+header span{
+
+
+    color:var(--cor-primaria);
+
+
+}
+
+
+
+
+
+/* ===============================
+ESTRUTURA
+================================ */
+
+
+.container{
+
+
+    display:flex;
+
+
+    min-height:
+
+    calc(100vh - 70px);
+
+
+}
+
+
+
+
+/* ===============================
+MENU
+================================ */
+
+
+.menu{
+
+
+    width:250px;
+
+
+    background:
+
+
+    linear-gradient(
+
+        180deg,
+
+        #1E1E1E,
+
+        #252526
+
+    );
+
+
+    padding:25px 15px;
+
+
+    box-shadow:
+
+    5px 0 20px rgba(0,0,0,.25);
+
+
+
+}
+
+
+
+.menu a{
+
+
+    display:flex;
+
+
+    align-items:center;
+
+
+    gap:12px;
+
+
+    padding:14px 18px;
+
+
+    margin-bottom:8px;
+
+
+    color:white;
+
+
+    text-decoration:none;
+
+
+    border-radius:10px;
+
+
+    font-size:15px;
+
+
+    transition:.25s;
+
+
+
+}
+
+
+
+
+.menu a:hover{
+
+
+    background:#333333;
+
+
+    color:var(--cor-primaria);
+
+
+}
+
+
+
+
+.menu .ativo{
+
+
+    background:#333333;
+
+
+    border-left:
+
+    5px solid var(--cor-primaria);
+
+
+    color:white;
+
+
+    font-weight:bold;
+
+
+}
+
+
+.menu .ativo::after{
+
+
+    content:"";
+
+
+    margin-left:auto;
+
+
+    width:8px;
+
+
+    height:8px;
+
+
+    border-radius:50%;
+
+
+    background:var(--cor-primaria);
+
+
+
+}
+
+
+
+
+
+/* ===============================
+CONTEÚDO
+================================ */
+
+
+.conteudo{
+
+
+    flex:1;
+
+
+    padding:30px;
+
+
+
+}
+/* ===============================
+   CARDS PREMIUM
+================================ */
+
+
+.card{
+
+
+    position:relative;
+
+
+    background:var(--cor-card);
+
+
+    border-radius:18px;
+
+
+    padding:25px;
+
+
+    margin-bottom:25px;
+
+
+    border:
+
+    1px solid rgba(206,145,120,.45);
+
+
+
+    overflow:hidden;
+
+
+    transition:.30s;
+
+
+
+    box-shadow:
+
+
+
+    0 5px 20px rgba(0,0,0,.08),
+
+
+    0 0 10px rgba(206,145,120,.15);
+
+
+
+}
+
+
+
+
+.card::before{
+
+
+    content:"";
+
+
+    position:absolute;
+
+
+    inset:0;
+
+
+    border-radius:18px;
+
+
+    pointer-events:none;
+
+
+
+    box-shadow:
+
+
+
+    inset 0 0 15px rgba(206,145,120,.12);
+
+
+
+}
+
+
+
+
+.card:hover{
+
+
+    transform:translateY(-4px);
+
+
+    border-color:var(--cor-primaria);
+
+
+
+    box-shadow:
+
+
+
+    0 0 18px rgba(206,145,120,.35),
+
+
+    0 15px 35px rgba(0,0,0,.15);
+
+
+
+}
+
+
+
+
+
+
+
+/* ===============================
+   TÍTULO DA PÁGINA
+================================ */
+
+
+
+.titulo-pagina{
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    align-items:center;
+
+
+    margin-bottom:25px;
+
+
+
+}
+
+
+
+
+.titulo-pagina h2{
+
+
+    font-size:28px;
+
+
+    color:var(--cor-texto);
+
+
+
+}
+
+
+
+
+
+
+
+/* ===============================
+   BOTÕES
+================================ */
+
+
+button{
+
+
+    border:none;
+
+
+    cursor:pointer;
+
+
+    border-radius:10px;
+
+
+    padding:12px 18px;
+
+
+    font-weight:600;
+
+
+    transition:.25s;
+
+
+
+}
+
+
+
+button:hover{
+
+
+    transform:translateY(-2px);
+
+
+
+}
+
+
+
+
+
+/* BOTÃO PRINCIPAL LARANJA */
+
+
+.botao,
+.btn-principal{
+
+
+    background:var(--cor-primaria);
+
+
+    color:white;
+
+
+
+    box-shadow:
+
+
+
+    0 0 10px rgba(206,145,120,.30);
+
+
+
+}
+
+
+
+
+.botao:hover,
+.btn-principal:hover{
+
+
+    background:var(--cor-primaria-hover);
+
+
+
+    box-shadow:
+
+
+
+    0 0 20px rgba(206,145,120,.45);
+
+
+
+}
+
+
+
+
+
+
+
+/* BOTÃO EDITAR AZUL */
+
+
+.btn-editar{
+
+
+    background:var(--cor-info);
+
+
+    color:white;
+
+
+
+    box-shadow:
+
+
+
+    0 0 8px rgba(86,156,214,.25);
+
+
+
+}
+
+
+
+
+.btn-editar:hover{
+
+
+    background:#4A8CC5;
+
+
+
+    box-shadow:
+
+
+
+    0 0 15px rgba(86,156,214,.45);
+
+
+
+}
+
+
+
+
+
+
+
+/* BOTÃO INATIVAR */
+
+
+.btn-inativar{
+
+
+    background:var(--cor-primaria);
+
+
+    color:white;
+
+
+
+}
+
+
+
+
+.btn-inativar:hover{
+
+
+    filter:brightness(.95);
+
+
+
+}
+
+
+
+
+
+
+
+/* BOTÃO EXCLUIR */
+
+
+.btn-excluir{
+
+
+    background:var(--cor-erro);
+
+
+    color:white;
+
+
+
+}
+
+
+
+
+.btn-excluir:hover{
+
+
+    filter:brightness(.95);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ===============================
+   FORMULÁRIOS
+================================ */
+
+
+
+.form-grid{
+
+
+    display:grid;
+
+
+    grid-template-columns:repeat(2,1fr);
+
+
+    gap:20px;
+
+
+
+}
+
+
+
+
+.campo{
+
+
+    display:flex;
+
+
+    flex-direction:column;
+
+
+
+}
+
+
+
+
+.campo label{
+
+
+    font-size:14px;
+
+
+    font-weight:600;
+
+
+    color:var(--cor-texto);
+
+
+    margin-bottom:7px;
+
+
+
+}
+
+
+
+
+.campo input,
+.campo select,
+.campo textarea{
+
+
+    height:45px;
+
+
+    border:
+
+    1px solid var(--cor-borda);
+
+
+
+    border-radius:10px;
+
+
+
+    padding:0 12px;
+
+
+
+    font-size:15px;
+
+
+
+    background:white;
+
+
+
+    color:var(--cor-texto);
+
+
+
+    outline:none;
+
+
+
+}
+
+
+
+
+
+.campo textarea{
+
+
+    height:auto;
+
+
+    padding:12px;
+
+
+
+}
+
+
+
+
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus{
+
+
+    border-color:
+
+    var(--cor-primaria);
+
+
+
+    box-shadow:
+
+
+
+    0 0 0 3px rgba(206,145,120,.20);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ===============================
+   TABELAS
+================================ */
+
+
+.tabela{
+
+
+    width:100%;
+
+
+    border-collapse:collapse;
+
+
+
+}
+
+
+
+
+.tabela thead{
+
+
+    background:
+
+
+
+    linear-gradient(
+
+        90deg,
+
+        #1E1E1E,
+
+        #252526
+
+    );
+
+
+
+    color:white;
+
+
+
+}
+
+
+
+
+.tabela th{
+
+
+    padding:15px;
+
+
+    text-align:left;
+
+
+
+}
+
+
+
+
+.tabela td{
+
+
+    padding:14px;
+
+
+
+    border-bottom:
+
+
+
+    1px solid var(--cor-borda);
+
+
+
+}
+
+
+
+
+
+.tabela tbody tr:nth-child(even){
+
+
+    background:#FAFAFA;
+
+
+
+}
+
+
+
+
+.tabela tbody tr:hover{
+
+
+    background:
+
+    var(--cor-aviso-fundo);
+
+
+
+}
+/* ===============================
+   STATUS
+================================ */
+
+
+.status{
+
+
+    padding:6px 12px;
+
+
+    border-radius:20px;
+
+
+    font-size:13px;
+
+
+    font-weight:bold;
+
+
+    display:inline-block;
+
+
+
+}
+
+
+
+
+.status-ativo{
+
+
+    background:var(--cor-sucesso-fundo);
+
+
+    color:var(--cor-sucesso);
+
+
+
+}
+
+
+
+
+.status-inativo{
+
+
+    background:var(--cor-erro-fundo);
+
+
+    color:var(--cor-erro);
+
+
+
+}
+
+
+
+
+.status-info{
+
+
+    background:
+
+    rgba(86,156,214,.15);
+
+
+
+    color:var(--cor-info);
+
+
+
+}
+
+
+
+
+
+
+
+/* ===============================
+   ÁREA DE AÇÕES
+================================ */
+
+
+.acoes{
+
+
+    display:flex;
+
+
+    gap:8px;
+
+
+    align-items:center;
+
+
+
+}
+
+
+
+
+.acoes button{
+
+
+    padding:
+
+
+    8px 12px;
+
+
+
+    font-size:13px;
+
+
+
+}
+
+
+
+
+
+
+
+/* ===============================
+   TEXTOS DE DESTAQUE
+================================ */
+
+
+.texto-secundario{
+
+
+    color:
+
+    var(--cor-texto-secundario);
+
+
+
+}
+
+
+
+
+.destaque{
+
+
+    color:
+
+    var(--cor-primaria);
+
+
+
+    font-weight:bold;
+
+
+
+}
+
+
+
+
+
+
+
+
+/* ===============================
+   ANIMAÇÃO DOS COMPONENTES
+================================ */
+
+
+@keyframes aparecer{
+
+
+    from{
+
+
+        opacity:0;
+
+
+        transform:translateY(10px);
+
+
+
+    }
+
+
+
+    to{
+
+
+        opacity:1;
+
+
+        transform:translateY(0);
+
+
+
+    }
+
+
+}
+
+
+
+
+
+.card,
+.tabela,
+.form-grid{
+
+
+    animation:
+
+    aparecer .35s ease;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ===============================
+   SOMBRA EXTRA
+================================ */
+
+
+.sombra{
+
+
+    box-shadow:
+
+
+    0 8px 25px rgba(0,0,0,.12);
+
+
+
+}
+
+
+
+
+
+
+
+
+/* ===============================
+   INPUT PLACEHOLDER
+================================ */
+
+
+input::placeholder{
+
+
+    color:#999;
+
+
+
+}
+
+
+
+
+
+input:focus{
+
+
+    outline:none;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ===============================
+   SCROLLBAR PROFISSIONAL
+================================ */
+
+
+::-webkit-scrollbar{
+
+
+    width:10px;
+
+
+
+}
+
+
+
+
+::-webkit-scrollbar-track{
+
+
+    background:#E8E8E8;
+
+
+
+}
+
+
+
+
+::-webkit-scrollbar-thumb{
+
+
+    background:
+
+    var(--cor-primaria);
+
+
+
+    border-radius:20px;
+
+
+
+}
+
+
+
+
+::-webkit-scrollbar-thumb:hover{
+
+
+    background:
+
+    var(--cor-primaria-hover);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+/* ===============================
+   RESPONSIVO TABLET
+================================ */
+
+
+@media(max-width:900px){
+
+
+
+    .menu{
+
+
+        width:80px;
+
+
+
+    }
+
+
+
+
+
+    .menu a{
+
+
+        justify-content:center;
+
+
+        font-size:0;
+
+
+
+    }
+
+
+
+
+
+    .menu a span{
+
+
+        display:none;
+
+
+
+    }
+
+
+
+
+
+    .conteudo{
+
+
+        padding:15px;
+
+
+
+    }
+
+
+
+
+
+    .form-grid{
+
+
+        grid-template-columns:1fr;
+
+
+
+    }
+
+
+
+
+
+    .titulo-pagina{
+
+
+        flex-direction:column;
+
+
+        align-items:flex-start;
+
+
+        gap:15px;
+
+
+
+    }
+
+
+
+
+
+    .card{
+
+
+        padding:18px;
+
+
+
+    }
+
+
+
+
+}
+
+
+
+
+
+
+
+
+/* ===============================
+   RESPONSIVO CELULAR
+================================ */
+
+
+@media(max-width:600px){
+
+
+
+    header{
+
+
+        padding:0 15px;
+
+
+
+    }
+
+
+
+
+
+    header h1{
+
+
+        font-size:20px;
+
+
+
+    }
+
+
+
+
+
+    .container{
+
+
+        flex-direction:column;
+
+
+
+    }
+
+
+
+
+
+    .menu{
+
+
+        width:100%;
+
+
+        display:flex;
+
+
+        overflow-x:auto;
+
+
+        padding:10px;
+
+
+
+    }
+
+
+
+
+
+    .menu a{
+
+
+        flex-shrink:0;
+
+
+
+    }
+
+
+
+
+
+    .conteudo{
+
+
+        padding:10px;
+
+
+
+    }
+
+
+
+
+
+    .acoes{
+
+
+        flex-wrap:wrap;
+
+
+
+    }
+
+
+
+
+
+}

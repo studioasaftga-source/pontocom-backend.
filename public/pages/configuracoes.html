@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações do Sistema - Painel RH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151c2c;
+            --bg-input: #0e1422;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --brand-blue: #38bdf8;
+            --brand-green: #10b981;
+            --brand-purple: #a855f7;
+            --brand-red: #f43f5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: transparent;
+            color: var(--text-primary);
+            padding: 24px;
+            width: 100%;
+        }
+
+        .page-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header-page { margin-bottom: 24px; }
+        .header-page h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .header-page p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+        .config-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--brand-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .form-grid-2 { grid-template-columns: 1fr 1fr; }
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { outline: none; border-color: var(--brand-blue); }
+        
+        input[type="color"] {
+            padding: 2px;
+            height: 48px;
+            width: 60px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+
+        .gps-actions { display: flex; align-items: center; justify-content: flex-start; margin-top: 12px; }
+
+        .btn-gps {
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: var(--brand-purple);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-gps:hover { background: rgba(168, 85, 247, 0.25); }
+
+        .btn-salvar {
+            width: 100%;
+            max-width: 280px;
+            padding: 16px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 28px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+        }
+        .btn-salvar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35); }
+        #status-msg { margin-top: 20px; font-size: 14px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+        <div class="header-page">
+            <h1>⚙️ Parametrização do Sistema</h1>
+            <p>Configure a localização da sede, regras do app e a identidade visual (White-label).</p>
+        </div>
+
+        <div class="config-card">
+            <form id="form-config" onsubmit="window.salvarConfiguracoesForm(event)">
+                
+                <div class="section-title">Identificação da Empresa</div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>Nome da Empresa / Unidade</label>
+                    <input type="text" id="nome_empresa" required placeholder="Ex: Matriz São Paulo">
+                </div>
+
+                <!-- CONTATO E NOTIFICAÇÕES (FINANCEIRO / DONO) -->
+                <div class="section-title">📲 Contato e Notificações</div>
+                <div class="form-grid-2" style="margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label>Responsável Financeiro / Dono</label>
+                        <input type="text" id="responsavel_financeiro" placeholder="Ex: João da Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp / Contato Responsável Financeiro</label>
+                        <input type="tel" id="whatsapp_financeiro" placeholder="Ex: 11999998888 (Apenas números)">
+                    </div>
+                </div>
+
+                <!-- GEOLOCALIZAÇÃO -->
+                <div class="section-title">📍 Geolocalização & Cerca Virtual (Geofence)</div>
+                <div style="margin-bottom: 24px;">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Latitude da Sede</label>
+                            <input type="number" step="any" id="latitude" required placeholder="-23.550520">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude da Sede</label>
+                            <input type="number" step="any" id="longitude" required placeholder="-46.633308">
+                        </div>
+                    </div>
+                    <div class="gps-actions">
+                        <button type="button" onclick="window.capturarGPS(event)" class="btn-gps">
+                            📍 Usar minha localização atual como Sede
+                        </button>
+                    </div>
+                </div>
+
+                <!-- REGRAS DE REGISTRO DE PONTO -->
+                <div class="section-title">⏱️ Regras de Registro de Ponto</div>
+                <div class="form-grid-2" style="margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label>Raio de Tolerância GPS (Metros)</label>
+                        <input type="number" id="raio_tolerancia_metros" required placeholder="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Trava Anti-Duplicidade (Minutos)</label>
+                        <input type="number" id="intervalo_minimo_minutos" required placeholder="15">
+                    </div>
+                </div>
+
+                <!-- IDENTIDADE VISUAL -->
+                <div class="section-title">🎨 Identidade Visual (Cores)</div>
+                <div class="form-grid-2" style="margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label>Cor Primária (Botões Principais)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="color" id="picker_primaria" value="#38bdf8" oninput="document.getElementById('cor_primaria').value = this.value.toUpperCase()">
+                            <input type="text" id="cor_primaria" placeholder="Ex: #38bdf8" maxlength="30" style="flex: 1;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cor Secundária (Menus e Fundos)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="color" id="picker_secundaria" value="#151c2c" oninput="document.getElementById('cor_secundaria').value = this.value.toUpperCase()">
+                            <input type="text" id="cor_secundaria" placeholder="Ex: #151c2c" maxlength="30" style="flex: 1;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cor de Destaque (Avisos e Ícones)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="color" id="picker_destaque" value="#10b981" oninput="document.getElementById('cor_destaque').value = this.value.toUpperCase()">
+                            <input type="text" id="cor_destaque" placeholder="Ex: #10b981" maxlength="30" style="flex: 1;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <button type="submit" class="btn-salvar">Salvar Configurações</button>
+                    <div id="status-msg"></div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const API_URL = (window.location.port === '5501' || window.location.port === '5500') 
+                ? 'http://localhost:3000/api/configuracoes' 
+                : '/api/configuracoes';
+
+            // FUNÇÃO GLOBAL DE CAPTURA DE GPS
+            window.capturarGPS = function(event) {
+                if(event) event.preventDefault();
+                
+                const msg = document.getElementById('status-msg');
+                if (msg) {
+                    msg.style.color = 'var(--brand-purple)';
+                    msg.innerText = '📡 Solicitando GPS... Por favor, autorize no navegador se solicitado.';
+                }
+
+                if (!navigator.geolocation) {
+                    if (msg) {
+                        msg.style.color = 'var(--brand-red)';
+                        msg.innerText = '❌ Erro: Seu navegador não suporta geolocalização.';
+                    }
+                    alert("Seu navegador não suporta a função de GPS.");
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (posicao) => {
+                        const lat = posicao.coords.latitude;
+                        const lng = posicao.coords.longitude;
+
+                        const inputLat = document.getElementById('latitude');
+                        const inputLng = document.getElementById('longitude');
+
+                        if(inputLat) inputLat.value = lat;
+                        if(inputLng) inputLng.value = lng;
+
+                        if (msg) {
+                            msg.style.color = 'var(--brand-green)';
+                            msg.innerText = `✓ Localização capturada! (Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)})`;
+                        }
+                    },
+                    (erro) => {
+                        console.error("Erro GPS:", erro);
+                        let detalhe = "Erro desconhecido ao obter GPS.";
+                        if (erro.code === 1) detalhe = "Permissão de GPS negada no navegador. Habilite a localização nas configurações do site.";
+                        if (erro.code === 2) detalhe = "Sinal de GPS indisponível.";
+                        if (erro.code === 3) detalhe = "Tempo limite excedido ao buscar GPS.";
+
+                        if (msg) {
+                            msg.style.color = 'var(--brand-red)';
+                            msg.innerText = `❌ ${detalhe}`;
+                        }
+                        alert(detalhe);
+                    },
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
+            };
+
+            // FUNÇÃO GLOBAL DE CARREGAR FORMULÁRIO
+            window.carregarConfiguracoesForm = async function() {
+                try {
+                    const res = await fetch(API_URL);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && Object.keys(data).length > 0) {
+                            if(document.getElementById('nome_empresa')) document.getElementById('nome_empresa').value = data.nome_empresa || '';
+                            if(document.getElementById('responsavel_financeiro')) document.getElementById('responsavel_financeiro').value = data.responsavel_financeiro || '';
+                            if(document.getElementById('whatsapp_financeiro')) document.getElementById('whatsapp_financeiro').value = data.whatsapp_financeiro || '';
+
+                            if(document.getElementById('latitude')) document.getElementById('latitude').value = data.latitude ?? '';
+                            if(document.getElementById('longitude')) document.getElementById('longitude').value = data.longitude ?? '';
+                            if(document.getElementById('raio_tolerancia_metros')) document.getElementById('raio_tolerancia_metros').value = data.raio_tolerancia_metros || 100;
+                            if(document.getElementById('intervalo_minimo_minutos')) document.getElementById('intervalo_minimo_minutos').value = data.intervalo_minimo_minutos || 15;
+                            
+                            if(data.cor_primaria && document.getElementById('cor_primaria')) {
+                                document.getElementById('cor_primaria').value = data.cor_primaria;
+                                if(data.cor_primaria.startsWith('#')) document.getElementById('picker_primaria').value = data.cor_primaria;
+                            }
+                            if(data.cor_secundaria && document.getElementById('cor_secundaria')) {
+                                document.getElementById('cor_secundaria').value = data.cor_secundaria;
+                                if(data.cor_secundaria.startsWith('#')) document.getElementById('picker_secundaria').value = data.cor_secundaria;
+                            }
+                            if(data.cor_destaque && document.getElementById('cor_destaque')) {
+                                document.getElementById('cor_destaque').value = data.cor_destaque;
+                                if(data.cor_destaque.startsWith('#')) document.getElementById('picker_destaque').value = data.cor_destaque;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar configurações:", e);
+                }
+            };
+
+            // FUNÇÃO GLOBAL DE SALVAR
+            window.salvarConfiguracoesForm = async function(e) {
+                if(e) e.preventDefault();
+                const msg = document.getElementById('status-msg');
+                if(msg) {
+                    msg.style.color = 'var(--brand-blue)';
+                    msg.innerText = 'Salvando configurações...';
+                }
+
+                const payload = {
+                    nome_empresa: document.getElementById('nome_empresa').value,
+                    responsavel_financeiro: document.getElementById('responsavel_financeiro').value.trim(),
+                    whatsapp_financeiro: document.getElementById('whatsapp_financeiro').value.trim(),
+                    
+                    latitude: parseFloat(document.getElementById('latitude').value),
+                    longitude: parseFloat(document.getElementById('longitude').value),
+                    raio_tolerancia_metros: parseInt(document.getElementById('raio_tolerancia_metros').value),
+                    intervalo_minimo_minutos: parseInt(document.getElementById('intervalo_minimo_minutos').value),
+                    
+                    cor_primaria: document.getElementById('cor_primaria').value.trim(),
+                    cor_secundaria: document.getElementById('cor_secundaria').value.trim(),
+                    cor_destaque: document.getElementById('cor_destaque').value.trim()
+                };
+
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        if(msg) {
+                            msg.style.color = 'var(--brand-green)';
+                            msg.innerText = '✓ Configurações salvas com sucesso!';
+                        }
+                    } else {
+                        if(msg) {
+                            msg.style.color = 'var(--brand-red)';
+                            msg.innerText = 'Erro ao salvar no servidor.';
+                        }
+                    }
+                } catch (err) {
+                    if(msg) {
+                        msg.style.color = 'var(--brand-red)';
+                        msg.innerText = 'Erro de conexão com o servidor.';
+                    }
+                }
+            };
+
+            // Executa a carga inicial
+            window.carregarConfiguracoesForm();
+        })();
+    </script>
+    <script src="/js/tema.js"></script>
+</body>
+</html>

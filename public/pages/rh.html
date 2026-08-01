@@ -1,0 +1,69 @@
+<div class="conteudo">
+    <div class="titulo-pagina">
+        <h2>📅 Fechamento de Ponto Mensal</h2>
+    </div>
+
+    <!-- PAINEL DE SELEÇÃO -->
+    <div class="card" style="margin-bottom: 20px;">
+        <h3>Selecionar / Criar Competência</h3>
+        <div style="display: flex; gap: 15px; align-items: center; margin-top: 15px; flex-wrap: wrap;">
+            <div>
+                <label for="selectMes">Mês:</label>
+                <select id="selectMes" class="input-control" style="padding: 8px;">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="selectAno">Ano:</label>
+                <input type="number" id="selectAno" value="2026" class="input-control" style="width: 100px; padding: 8px;">
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="button" onclick="iniciarCompetencia()" class="btn-acao" style="background-color: #0056b3; color: white; cursor: pointer;">⚡ Abrir Competência</button>
+                <button type="button" id="btnCalcular" onclick="recalcularPonto()" class="btn-acao" style="background-color: #28a745; color: white; cursor: pointer; display: none;">⚙️ Processar Cálculos</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA DE RESULTADOS -->
+    <div class="card">
+        <h3>Espelho de Horas Calculadas</h3>
+        <p style="color: #666; font-size: 14px;">Revise as horas antes da aprovação final para envio à Folha de Pagamento.</p>
+        
+        <table class="tabela" style="width: 100%; margin-top: 15px;">
+            <thead>
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Horas Previstas</th>
+                    <th>Horas Trabalhadas</th>
+                    <th>Horas Extras</th>
+                    <th>Atrasos</th>
+                    <th>Faltas</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaFechamento">
+                <tr>
+                    <td colspan="8" style="text-align: center; color: #888;">Nenhuma competência selecionada ou aberta.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Garante o carregamento do script da tela -->
+<script src="js/rh.js"></script>
+<script src="/js/tema.js"></script>

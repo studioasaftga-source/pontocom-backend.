@@ -1,0 +1,78 @@
+<div class="container-controle-ponto">
+    <h2>Gestão e Controle de Ponto (RH)</h2>
+
+    <!-- Navegação por Abas -->
+    <div class="aba-navegacao" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+        <button class="btn-aba active" onclick="alternarAba('abaSolicitacoes')" style="padding: 10px 20px; font-weight: bold; cursor: pointer;">
+            📋 Atestados e Solicitações Pendentes
+        </button>
+        <button class="btn-aba" onclick="alternarAba('abaFechamento')" style="padding: 10px 20px; font-weight: bold; cursor: pointer;">
+            🔒 Fechamento Mensal & DSR
+        </button>
+    </div>
+
+    <!-- ABA 1: SOLICITAÇÕES E ATESTADOS -->
+    <div id="abaSolicitacoes" class="conteudo-aba">
+        <h3>Atestados e Ajustes Pendentes de Análise</h3>
+        
+        <div style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); overflow: hidden; margin-top: 15px;">
+            <table class="tabela-solicitacoes" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 14px 16px; color: #475569; font-size: 13px; text-transform: uppercase;">Colaborador</th>
+                        <th style="padding: 14px 16px; color: #475569; font-size: 13px; text-transform: uppercase;">Data da Ocorrência</th>
+                        <th style="padding: 14px 16px; color: #475569; font-size: 13px; text-transform: uppercase;">Detalhes da Solicitação</th>
+                        <th style="padding: 14px 16px; color: #475569; font-size: 13px; text-transform: uppercase; text-align: center;">Comprovante</th>
+                        <th style="padding: 14px 16px; color: #475569; font-size: 13px; text-transform: uppercase;">Decisão RH</th>
+                    </tr>
+                </thead>
+                <tbody id="listaSolicitacoesPendentes">
+                    <!-- Preenchido via JavaScript dinamicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ABA 2: FECHAMENTO MENSAL E DSR -->
+    <div id="abaFechamento" class="conteudo-aba" style="display: none;">
+        <!-- Filtros de Busca para o Fechamento -->
+        <div class="filtros-box" style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <select id="selectFuncionarioFechamento" class="form-control" style="padding: 8px;">
+                <option value="">Selecione o Funcionário...</option>
+            </select>
+            <input type="month" id="inputMesAnoFechamento" class="form-control" style="padding: 8px;">
+            <button onclick="carregarFechamentoRH()" class="btn btn-primary" style="padding: 8px 15px;">Calcular Mês</button>
+        </div>
+
+        <!-- Cards com Totais Calculados -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div style="background: #f8f9fa; border-left: 4px solid #0056b3; padding: 15px; border-radius: 6px;">
+                <span style="font-size: 12px; color: #666; font-weight: bold; display: block;">HORAS TRABALHADAS</span>
+                <span id="resumoHorasTrabalhadas" style="font-size: 20px; font-weight: bold; color: #0056b3;">00:00</span>
+            </div>
+            <div style="background: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; border-radius: 6px;">
+                <span style="font-size: 12px; color: #666; font-weight: bold; display: block;">HORAS EXTRAS</span>
+                <span id="resumoHorasExtras" style="font-size: 20px; font-weight: bold; color: #28a745;">00:00</span>
+            </div>
+            <div style="background: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; border-radius: 6px;">
+                <span style="font-size: 12px; color: #666; font-weight: bold; display: block;">ATRASOS / FALTAS</span>
+                <span id="resumoAtrasosFaltas" style="font-size: 20px; font-weight: bold; color: #dc3545;">00:00</span>
+            </div>
+            <div style="background: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; border-radius: 6px;">
+                <span style="font-size: 12px; color: #666; font-weight: bold; display: block;">ESTIMATIVA DSR (R$)</span>
+                <input type="number" id="inputValorDSR" placeholder="0.00" step="0.01" style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-size: 16px; font-weight: bold; margin-top: 5px;">
+            </div>
+        </div>
+
+        <!-- Botão de Ação -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 15px; border-radius: 8px;">
+            <span style="font-size: 13px; color: #495057;">
+                ℹ️ Ao liberar, o funcionário receberá o espelho no PWA para conferir as horas e assinar.
+            </span>
+            <button id="btnLiberarFechamento" onclick="liberarFechamentoParaFuncionario()" style="background: #28a745; color: white; border: none; padding: 12px 24px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer;">
+                🚀 Liberar Espelho para Funcionário
+            </button>
+        </div>
+    </div>
+</div>
+<script src="/js/tema.js"></script>

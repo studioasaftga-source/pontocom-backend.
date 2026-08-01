@@ -1,0 +1,301 @@
+document.addEventListener('DOMContentLoaded', () => {
+    carregarSolicitacoesPendentes();
+    carregarFuncionariosSelect();
+});
+
+// Criamos um "dicionário" temporário para guardar as imagens na memória da tela
+window.anexosPonto = {};
+
+// ==========================================
+// 1. ALTERNAR ABAS
+// ==========================================
+function alternarAba(abaId) {
+    document.getElementById('abaSolicitacoes').style.display = 'none';
+    document.getElementById('abaFechamento').style.display = 'none';
+
+    const botoes = document.querySelectorAll('.btn-aba');
+    botoes.forEach(btn => btn.style.background = '#e9ecef');
+
+    document.getElementById(abaId).style.display = 'block';
+    event.currentTarget.style.background = '#0056b3';
+    event.currentTarget.style.color = '#ffffff';
+}
+
+// ==========================================
+// 2. GESTÃO DE ATESTADOS E SOLICITAÇÕES
+// ==========================================
+async function carregarSolicitacoesPendentes() {
+    const tbody = document.getElementById('listaSolicitacoesPendentes');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando solicitações...</td></tr>';
+
+    try {
+        const resposta = await fetch('/api/controle-ponto/solicitacoes/pendentes');
+        const solicitacoes = await resposta.json();
+
+        if (solicitacoes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #64748b; font-weight: 500;">Nenhuma solicitação pendente no momento. 🎉</td></tr>';
+            return;
+        }
+
+        // Limpa os anexos antigos toda vez que recarrega a tabela
+        window.anexosPonto = {};
+
+        tbody.innerHTML = solicitacoes.map(sol => {
+            const horaSolicitada = sol.hora_entrada || sol.hora_saida_almoco || sol.hora_volta_almoco || sol.hora_saida || '--:--';
+            
+            let tipoBatida = 'Registro';
+            let motivoReal = sol.justificativa;
+            
+            if (sol.justificativa && sol.justificativa.includes(']')) {
+                const partes = sol.justificativa.split(']');
+                tipoBatida = partes[0].replace('[', ''); 
+                motivoReal = partes.length > 1 ? partes[1].trim() : '';
+            }
+
+            let detalhesVisual = '';
+            if (sol.tipo_solicitacao === 'AJUSTE') {
+                const horarioOriginal = sol.horario_original || 'Sem registro';
+                
+                detalhesVisual = `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px; width: 100%;">
+                        <div style="margin-bottom: 10px;">
+                            <span style="font-size: 11px; background: #dbeafe; color: #1e3a8a; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">⏰ Ajuste de ${tipoBatida}</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; background: white; padding: 8px; border-radius: 4px; border: 1px dashed #cbd5e1; margin-bottom: 10px;">
+                            <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 700; display: block; text-transform: uppercase;">Batida Original</span>
+                                <strong style="color: #475569; font-size: 14px;">${horarioOriginal}</strong>
+                            </div>
+                            <div style="text-align: center; flex: 1;">
+                                <span style="font-size: 11px; color: #64748b; font-weight: 700; display: block; text-transform: uppercase;">Horário Solicitado</span>
+                                <strong style="color: #3b82f6; font-size: 14px;">${horaSolicitada}</strong>
+                            </div>
+                        </div>
+
+                        <div style="background: #f1f5f9; padding: 8px; border-radius: 4px; border-left: 3px solid #94a3b8;">
+                            <span style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px;">💬 Justificativa:</span>
+                            <span style="font-size: 13px; color: #0f172a; font-style: italic;">"${motivoReal}"</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detalhesVisual = `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #a855f7; padding: 12px; border-radius: 6px; width: 100%;">
+                        <span style="font-size: 11px; background: #f3e8ff; color: #6b21a8; padding: 3px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📄 Atestado Médico</span><br>
+                        <div style="margin-top: 10px; background: #f1f5f9; padding: 8px; border-radius: 4px; border-left: 3px solid #cbd5e1;">
+                            <span style="font-size: 11px; color: #64748b; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px;">💬 Observação:</span>
+                            <span style="font-size: 13px; color: #0f172a; font-style: italic;">"${sol.justificativa || 'Sem observações'}"</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Armazena a imagem no dicionário (se existir) para não travar o HTML
+            if (sol.anexo_url) {
+                window.anexosPonto[sol.id] = sol.anexo_url;
+            }
+
+            return `
+            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;">
+                <td style="padding: 16px; vertical-align: top;">
+                    <strong style="color: #1e293b; font-size: 15px;">${sol.funcionario_nome}</strong><br>
+                    <small style="color: #64748b; font-size: 12px;">CPF: ${sol.cpf}</small>
+                </td>
+                <td style="padding: 16px; vertical-align: top; font-weight: 600; color: #334155;">
+                    ${formatarData(sol.data_registro)}
+                </td>
+                <td style="padding: 16px; vertical-align: top; width: 45%;">
+                    ${detalhesVisual}
+                </td>
+                <td style="padding: 16px; vertical-align: top; text-align: center;">
+                    ${sol.anexo_url 
+                        ? `<button onclick="visualizarAnexo(${sol.id})" style="color: #2563eb; font-weight: bold; background: #eff6ff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;">📎 Ver Anexo</button>` 
+                        : '<span style="color: #94a3b8; font-size: 13px;">Sem anexo</span>'}
+                </td>
+                <td style="padding: 16px; vertical-align: top;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="responderSolicitacao(${sol.id}, 'Aprovado')" style="background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                            ✓ Aprovar
+                        </button>
+                        <button onclick="responderSolicitacao(${sol.id}, 'Recusado')" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);">
+                            ✕ Recusar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+
+    } catch (erro) {
+        console.error("Erro ao carregar solicitações:", erro);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444; padding: 15px;">Erro ao carregar solicitações.</td></tr>';
+    }
+}
+
+// Nova função que burla o bloqueio do Chrome abrindo a imagem numa nova aba formatada
+function visualizarAnexo(id) {
+    const base64 = window.anexosPonto[id];
+    if (!base64) {
+        alert("Erro ao carregar anexo.");
+        return;
+    }
+
+    const novaAba = window.open();
+    novaAba.document.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Visualizador de Atestado</title>
+                <style>
+                    body {
+                        margin: 0;
+                        background-color: #0b0f19;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                    }
+                    img {
+                        max-width: 95%;
+                        max-height: 95%;
+                        border-radius: 8px;
+                        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="${base64}" alt="Atestado">
+            </body>
+        </html>
+    `);
+    novaAba.document.close();
+}
+
+async function responderSolicitacao(id, status) {
+    let respostaRH = "";
+    if (status === 'Recusado') {
+        respostaRH = prompt("Informe o motivo da recusa (opcional):");
+    }
+
+    try {
+        const resposta = await fetch('/api/controle-ponto/solicitacoes/responder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                solicitacao_id: id,
+                status: status,
+                resposta_rh: respostaRH
+            })
+        });
+
+        const resultado = await resposta.json();
+
+        if (resposta.ok) {
+            alert(`✅ ${resultado.mensagem}`);
+            carregarSolicitacoesPendentes(); // Recarrega a tabela
+        } else {
+            alert(`❌ Erro: ${resultado.erro}`);
+        }
+    } catch (erro) {
+        console.error("Erro ao responder solicitação:", erro);
+        alert("Erro de conexão ao processar resposta.");
+    }
+}
+
+// ==========================================
+// 3. FECHAMENTO MENSAL E DSR
+// ==========================================
+async function carregarFuncionariosSelect() {
+    const select = document.getElementById('selectFuncionarioFechamento');
+    if (!select) return;
+
+    try {
+        const resposta = await fetch('/api/funcionarios');
+        const funcionarios = await resposta.json();
+
+        select.innerHTML = '<option value="">Selecione o Funcionário...</option>' + 
+            funcionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+    } catch (erro) {
+        console.error("Erro ao carregar lista de funcionários:", erro);
+    }
+}
+
+async function carregarFechamentoRH() {
+    const funcionarioId = document.getElementById('selectFuncionarioFechamento').value;
+    const mesAno = document.getElementById('inputMesAnoFechamento').value;
+
+    if (!funcionarioId || !mesAno) {
+        alert("Selecione um funcionário e o mês/ano para calcular.");
+        return;
+    }
+
+    const [ano, mes] = mesAno.split('-');
+
+    try {
+        const resposta = await fetch(`/api/ponto/espelho/${funcionarioId}/${mes}/${ano}`);
+        const dados = await resposta.json();
+
+        if (resposta.ok && dados.totais) {
+            document.getElementById('resumoHorasTrabalhadas').innerText = dados.totais.horasTrabalhadas || "00:00";
+            document.getElementById('resumoHorasExtras').innerText = dados.totais.horasExtras || "00:00";
+            document.getElementById('resumoAtrasosFaltas').innerText = dados.totais.atrasosFaltas || "00:00";
+            document.getElementById('inputValorDSR').value = dados.totais.valorDSR || "0.00";
+        }
+    } catch (erro) {
+        console.error("Erro ao carregar dados do fechamento:", erro);
+        alert("Erro ao buscar cálculos do mês selecionado.");
+    }
+}
+
+async function liberarFechamentoParaFuncionario() {
+    const funcionarioId = document.getElementById('selectFuncionarioFechamento').value;
+    const mesAno = document.getElementById('inputMesAnoFechamento').value;
+
+    if (!funcionarioId || !mesAno) {
+        alert("Selecione o funcionário e o mês/ano antes de liberar.");
+        return;
+    }
+
+    const [ano, mes] = mesAno.split('-');
+    const horasTrabalhadas = document.getElementById('resumoHorasTrabalhadas').innerText + ':00';
+    const horasExtras = document.getElementById('resumoHorasExtras').innerText + ':00';
+    const atrasosFaltas = document.getElementById('resumoAtrasosFaltas').innerText + ':00';
+    const valorDSR = parseFloat(document.getElementById('inputValorDSR').value) || 0.00;
+
+    try {
+        const resposta = await fetch('/api/controle-ponto/fechamento/liberar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                funcionario_id: funcionarioId,
+                mes: parseInt(mes),
+                ano: parseInt(ano),
+                total_horas_trabalhadas: horasTrabalhadas,
+                total_horas_extras: horasExtras,
+                total_atrasos_faltas: atrasosFaltas,
+                valor_dsr: valorDSR
+            })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.ok) {
+            alert("✅ Espelho de ponto liberado com sucesso para o colaborador!");
+        } else {
+            alert("❌ Erro: " + dados.erro);
+        }
+    } catch (erro) {
+        console.error("Erro na liberação:", erro);
+        alert("Erro ao enviar liberação de fechamento.");
+    }
+}
+
+// Funções Utilitárias
+function formatarData(dataIso) {
+    if (!dataIso) return '-';
+    const data = new Date(dataIso);
+    return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+}
