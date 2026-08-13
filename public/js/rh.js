@@ -1,3 +1,4 @@
+const API_URL = "https://pontocom-backend.onrender.com";
 var fechamentoAtualId = null;
 
 // ========================================================
@@ -40,7 +41,7 @@ async function iniciarCompetencia() {
     if (!selectMes || !selectAno) return alert("Campos de mês/ano não encontrados.");
 
     try {
-        const res = await fetch("/api/rh/fechamento", {
+        const res = await fetch(`${API_URL}/api/rh/fechamento`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ mes: Number(selectMes.value), ano: Number(selectAno.value) })
@@ -61,7 +62,7 @@ async function iniciarCompetencia() {
 
 async function buscarECarregarCompetenciaExistente(mes, ano, silencioso = false) {
     try {
-        const res = await fetch(`/api/rh/fechamento?mes=${mes}&ano=${ano}`);
+        const res = await fetch(`${API_URL}/api/rh/fechamento?mes=${mes}&ano=${ano}`);
         const dados = await res.json();
 
         if (dados.sucesso && dados.fechamento) {
@@ -84,7 +85,7 @@ async function recalcularPonto() {
     if (!fechamentoAtualId) return alert("Selecione uma competência ativa primeiro.");
 
     try {
-        const res = await fetch(`/api/rh/fechamento/${fechamentoAtualId}/calcular`, {
+        const res = await fetch(`${API_URL}/api/rh/fechamento/${fechamentoAtualId}/calcular`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
         });
@@ -103,7 +104,7 @@ async function recalcularPonto() {
 
 async function carregarDadosFechamento(id) {
     try {
-        const res = await fetch(`/api/rh/fechamento/${id}`);
+        const res = await fetch(`${API_URL}/api/rh/fechamento/${id}`);
         const dados = await res.json();
 
         if (dados.sucesso) {
@@ -166,7 +167,7 @@ async function carregarDadosFechamento(id) {
 async function liberarEspelho(funcionarioId) {
     if (!fechamentoAtualId) return;
     if (confirm("Deseja liberar este espelho para o funcionário assinar no app?")) {
-        await fetch(`/api/rh/fechamento/${fechamentoAtualId}/liberar/${funcionarioId}`, { method: "PUT" });
+        await fetch(`${API_URL}/api/rh/fechamento/${fechamentoAtualId}/liberar/${funcionarioId}`, { method: "PUT" });
         carregarDadosFechamento(fechamentoAtualId);
     }
 }
@@ -174,7 +175,7 @@ async function liberarEspelho(funcionarioId) {
 async function aprovarFuncionario(funcionarioId) {
     if (!fechamentoAtualId) return;
     if (confirm("Concluir definitivamente a folha deste funcionário?")) {
-        await fetch(`/api/rh/fechamento/${fechamentoAtualId}/aprovar/${funcionarioId}`, { method: "PUT" });
+        await fetch(`${API_URL}/api/rh/fechamento/${fechamentoAtualId}/aprovar/${funcionarioId}`, { method: "PUT" });
         carregarDadosFechamento(fechamentoAtualId);
     }
 }
@@ -189,9 +190,8 @@ async function carregarFuncionariosHolerite() {
     try {
         select.innerHTML = '<option value="">Buscando funcionários...</option>';
 
-        // Tenta a rota de funcionários do fechamento, se falhar tenta a geral
-        let resposta = await fetch("/api/rh/fechamento/funcionarios-lista");
-        if (!resposta.ok) resposta = await fetch("/api/funcionarios");
+        let resposta = await fetch(`${API_URL}/api/rh/fechamento/funcionarios-lista`);
+        if (!resposta.ok) resposta = await fetch(`${API_URL}/api/funcionarios`);
 
         if (!resposta.ok) {
             throw new Error("Rotas de funcionários indisponíveis.");
@@ -215,7 +215,6 @@ async function carregarFuncionariosHolerite() {
             return;
         }
 
-        // Ordena por ordem alfabética
         funcionarios.sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR"));
 
         funcionarios.forEach(f => {
@@ -242,7 +241,7 @@ async function gerarHoleritesComFiltro() {
     if (!funcionarioId || funcionarioId === "") return alert("Selecione um funcionário ou 'Todos os funcionários'.");
 
     try {
-        const resComp = await fetch(`/api/rh/fechamento?mes=${mes}&ano=${ano}`);
+        const resComp = await fetch(`${API_URL}/api/rh/fechamento?mes=${mes}&ano=${ano}`);
         const dadosComp = await resComp.json();
 
         if (!dadosComp.sucesso || !dadosComp.fechamento) {
@@ -250,7 +249,7 @@ async function gerarHoleritesComFiltro() {
         }
 
         const fechamentoId = dadosComp.fechamento.id;
-        const url = `/api/rh/fechamento/holerites-lote/${fechamentoId}?funcionarioId=${funcionarioId}`;
+        const url = `${API_URL}/api/rh/fechamento/holerites-lote/${fechamentoId}?funcionarioId=${funcionarioId}`;
         const resLote = await fetch(url);
         const dadosLote = await resLote.json();
 
@@ -417,7 +416,7 @@ async function gerarHoleritesComFiltro() {
 
 async function imprimirHoleriteIndividual(fechamentoId, funcionarioId) {
     try {
-        const url = `/api/rh/fechamento/holerites-lote/${fechamentoId}?funcionarioId=${funcionarioId}`;
+        const url = `${API_URL}/api/rh/fechamento/holerites-lote/${fechamentoId}?funcionarioId=${funcionarioId}`;
         const resLote = await fetch(url);
         const dadosLote = await resLote.json();
 

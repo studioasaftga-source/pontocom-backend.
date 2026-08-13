@@ -2,17 +2,17 @@
 // PONTOCOM RH - DASHBOARD JS
 // ===================================
 
+const API_URL = "https://pontocom-backend.onrender.com";
 
 async function carregarDashboard(){
 
     try{
 
-
         // ================================
         // RESUMO GERAL
         // ================================
 
-        const resposta = await fetch("/api/rh/dashboard");
+        const resposta = await fetch(`${API_URL}/api/rh/dashboard`);
 
         const dados = await resposta.json();
 

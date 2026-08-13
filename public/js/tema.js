@@ -1,11 +1,8 @@
 // Arquivo: public/js/tema.js
 
-document.addEventListener("DOMContentLoaded", async () => {
-    // Define a URL correta dependendo de onde o sistema está rodando (Live Server ou Produção)
-    const API_URL = (window.location.port === '5501' || window.location.port === '5500' || window.location.port === '3000') 
-        ? 'http://localhost:3000/api/configuracoes' 
-        : '/api/configuracoes';
+const API_URL = "https://pontocom-backend.onrender.com/api/configuracoes";
 
+document.addEventListener("DOMContentLoaded", async () => {
     try {
         // Busca as configurações (GPS e Cores) do backend
         const res = await fetch(API_URL);

@@ -1,3 +1,5 @@
+const API_URL = "https://pontocom-backend.onrender.com";
+
 document.addEventListener('DOMContentLoaded', () => {
     carregarValesPendentes();
 });
@@ -11,7 +13,7 @@ async function carregarValesPendentes() {
     container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando vales pendentes...</td></tr>';
 
     try {
-        const resposta = await fetch('/api/vale/pendentes');
+        const resposta = await fetch(`${API_URL}/api/vale/pendentes`);
         const vales = await resposta.json();
 
         if (vales.length === 0) {
@@ -60,7 +62,7 @@ async function responderVale(valeId, status) {
     }
 
     try {
-        const resposta = await fetch('/api/vale/responder', {
+        const resposta = await fetch(`${API_URL}/api/vale/responder`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

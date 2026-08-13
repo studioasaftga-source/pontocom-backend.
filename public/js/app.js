@@ -1,12 +1,12 @@
+const API_URL = "https://pontocom-backend.onrender.com";
 let limiteMaximoValePermitido = 0;
 
 // 1. Carregar Limites e Histórico de Vales do Funcionário
 async function carregarDadosValeColaborador() {
-    // Pega o ID do funcionário logado na sessão/localStorage
     const funcionarioId = localStorage.getItem("funcionario_id") || 1; 
 
     try {
-        const res = await fetch(`/api/vale/meus-vales/${funcionarioId}`);
+        const res = await fetch(`${API_URL}/api/vale/meus-vales/${funcionarioId}`);
         const dados = await res.json();
 
         if (dados.sucesso) {
@@ -83,7 +83,8 @@ async function enviarSolicitacaoVale() {
     }
 
     try {
-        const res = await fetch("/api/vale/solicitar", {
+        // CORRIGIDO AQUI ABAIXO:
+        const res = await fetch(`${API_URL}/api/vale/solicitar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -99,7 +100,7 @@ async function enviarSolicitacaoVale() {
             alert("Solicitação enviada com sucesso! Aguarde a aprovação do RH.");
             document.getElementById("inputValorVale").value = "";
             document.getElementById("inputMotivoVale").value = "";
-            carregarDadosValeColaborador(); // Recarrega o histórico
+            carregarDadosValeColaborador(); 
         } else {
             alert(dados.erro || "Erro ao solicitar vale.");
         }
@@ -109,7 +110,6 @@ async function enviarSolicitacaoVale() {
     }
 }
 
-// Inicializar ao carregar a página
 document.addEventListener("DOMContentLoaded", () => {
     carregarDadosValeColaborador();
 });

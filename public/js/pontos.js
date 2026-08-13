@@ -2,12 +2,8 @@
 // FRONT-END: Lógica da Tela de Jornada (public/js/pontos.js)
 // ==========================================
 
-// Descobre sozinho onde o sistema está rodando (Render, Localhost, IP do Wifi)
-const API_URL = window.location.origin.includes('192.168')
-    ? 'http://192.168.1.8:3000/api'
-    : (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-        ? 'http://localhost:3000/api'
-        : '/api');
+// URL fixa para o seu back-end no Render
+const API_URL = "https://pontocom-backend.onrender.com/api";
 
 // Pegamos o ID do Colaborador salvo no Login
 const funcionarioId = localStorage.getItem('funcionarioId') || localStorage.getItem('funcionario_id') || 1;
@@ -215,7 +211,6 @@ async function enviarRegistroPonto(lat, lng) {
     }
 
     try {
-        // Deduz qual a batida baseada no nome do botão para garantir a compatibilidade
         const btn = document.getElementById('btn-ponto');
         let tipoDeducido = 'ENTRADA';
         if (btn) {

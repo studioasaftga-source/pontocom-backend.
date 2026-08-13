@@ -2,6 +2,7 @@
 // PONTOCOM RH - CARGOS
 // =====================================
 
+const API_URL = "https://pontocom-backend.onrender.com"; // Adicionado link oficial
 let listaCargosGlobal = [];
 let cargoEmEdicaoId = null;
 
@@ -18,8 +19,8 @@ async function carregarListaCargos() {
     if (!tbody) return;
 
     try {
-        let resposta = await fetch('/api/cargos');
-        if (!resposta.ok) resposta = await fetch('/api/rh/cargos');
+        // Usando a API_URL
+        const resposta = await fetch(`${API_URL}/api/cargos`);
 
         if (resposta.ok) {
             const cargos = await resposta.json();
@@ -72,7 +73,6 @@ function editarCargo(id) {
     document.getElementById('horaSaida').value = formatarHora(cargo.hora_saida);
     document.getElementById('cargaHoraria').value = cargo.carga_horaria || '';
 
-    // Altera o botão para modo de edição
     const btnSalvar = document.getElementById('btnSalvar');
     btnSalvar.innerHTML = '✏️ Atualizar Cargo';
     btnSalvar.style.backgroundColor = '#fbbf24';
@@ -95,29 +95,20 @@ async function salvarCargo(event) {
         carga_horaria: document.getElementById('cargaHoraria').value
     };
 
-    const url = cargoEmEdicaoId ? `/api/cargos/${cargoEmEdicaoId}` : '/api/cargos';
+    // Usando API_URL
+    const url = cargoEmEdicaoId ? `${API_URL}/api/cargos/${cargoEmEdicaoId}` : `${API_URL}/api/cargos`;
     const method = cargoEmEdicaoId ? 'PUT' : 'POST';
 
     try {
-        let resposta = await fetch(url, {
+        const resposta = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        if (!resposta.ok && resposta.status === 404) {
-            const urlAlt = cargoEmEdicaoId ? `/api/rh/cargos/${cargoEmEdicaoId}` : '/api/rh/cargos';
-            resposta = await fetch(urlAlt, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        }
-
         if (resposta.ok) {
             alert(cargoEmEdicaoId ? "Cargo atualizado com sucesso!" : "Cargo cadastrado com sucesso!");
             
-            // Reseta formulário e botão
             document.getElementById('formCargo').reset();
             cargoEmEdicaoId = null;
             
@@ -142,11 +133,8 @@ async function deletarCargo(id) {
     if (!confirm("Tem certeza que deseja excluir este cargo?")) return;
 
     try {
-        let resposta = await fetch(`/api/cargos/${id}`, { method: 'DELETE' });
-
-        if (!resposta.ok && resposta.status === 404) {
-            resposta = await fetch(`/api/rh/cargos/${id}`, { method: 'DELETE' });
-        }
+        // Usando API_URL
+        const resposta = await fetch(`${API_URL}/api/cargos/${id}`, { method: 'DELETE' });
 
         if (!resposta.ok) {
             const dados = await resposta.json().catch(() => ({}));

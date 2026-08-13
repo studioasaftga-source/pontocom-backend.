@@ -1,3 +1,5 @@
+const API_URL = "https://pontocom-backend.onrender.com";
+
 document.addEventListener('DOMContentLoaded', () => {
     carregarSolicitacoesPendentes();
     carregarFuncionariosSelect();
@@ -31,7 +33,7 @@ async function carregarSolicitacoesPendentes() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando solicitações...</td></tr>';
 
     try {
-        const resposta = await fetch('/api/controle-ponto/solicitacoes/pendentes');
+        const resposta = await fetch(`${API_URL}/api/controle-ponto/solicitacoes/pendentes`);
         const solicitacoes = await resposta.json();
 
         if (solicitacoes.length === 0) {
@@ -93,7 +95,6 @@ async function carregarSolicitacoesPendentes() {
                 `;
             }
 
-            // Armazena a imagem no dicionário (se existir) para não travar o HTML
             if (sol.anexo_url) {
                 window.anexosPonto[sol.id] = sol.anexo_url;
             }
@@ -126,7 +127,7 @@ async function carregarSolicitacoesPendentes() {
                     </div>
                 </td>
             </tr>
-        `;
+            `;
         }).join('');
 
     } catch (erro) {
@@ -135,7 +136,6 @@ async function carregarSolicitacoesPendentes() {
     }
 }
 
-// Nova função que burla o bloqueio do Chrome abrindo a imagem numa nova aba formatada
 function visualizarAnexo(id) {
     const base64 = window.anexosPonto[id];
     if (!base64) {
@@ -181,7 +181,7 @@ async function responderSolicitacao(id, status) {
     }
 
     try {
-        const resposta = await fetch('/api/controle-ponto/solicitacoes/responder', {
+        const resposta = await fetch(`${API_URL}/api/controle-ponto/solicitacoes/responder`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -195,7 +195,7 @@ async function responderSolicitacao(id, status) {
 
         if (resposta.ok) {
             alert(`✅ ${resultado.mensagem}`);
-            carregarSolicitacoesPendentes(); // Recarrega a tabela
+            carregarSolicitacoesPendentes(); 
         } else {
             alert(`❌ Erro: ${resultado.erro}`);
         }
@@ -213,7 +213,7 @@ async function carregarFuncionariosSelect() {
     if (!select) return;
 
     try {
-        const resposta = await fetch('/api/funcionarios');
+        const resposta = await fetch(`${API_URL}/api/funcionarios`);
         const funcionarios = await resposta.json();
 
         select.innerHTML = '<option value="">Selecione o Funcionário...</option>' + 
@@ -235,7 +235,7 @@ async function carregarFechamentoRH() {
     const [ano, mes] = mesAno.split('-');
 
     try {
-        const resposta = await fetch(`/api/ponto/espelho/${funcionarioId}/${mes}/${ano}`);
+        const resposta = await fetch(`${API_URL}/api/ponto/espelho/${funcionarioId}/${mes}/${ano}`);
         const dados = await resposta.json();
 
         if (resposta.ok && dados.totais) {
@@ -266,7 +266,7 @@ async function liberarFechamentoParaFuncionario() {
     const valorDSR = parseFloat(document.getElementById('inputValorDSR').value) || 0.00;
 
     try {
-        const resposta = await fetch('/api/controle-ponto/fechamento/liberar', {
+        const resposta = await fetch(`${API_URL}/api/controle-ponto/fechamento/liberar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

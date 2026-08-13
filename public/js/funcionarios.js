@@ -2,6 +2,7 @@
 // PONTOCOM RH - FUNCIONÁRIOS
 // =====================================
 
+const API_URL = "https://pontocom-backend.onrender.com";
 let listaCargosCache = []; // Guarda os cargos em memória para consultar a carga horária
 
 // Função principal de inicialização
@@ -17,8 +18,8 @@ async function carregarCargosSelect() {
     if (!selectCargo) return;
 
     try {
-        let resposta = await fetch("/api/cargos");
-        if (!resposta.ok) resposta = await fetch("/api/rh/cargos"); 
+        let resposta = await fetch(`${API_URL}/api/cargos`);
+        if (!resposta.ok) resposta = await fetch(`${API_URL}/api/rh/cargos`); 
         if (!resposta.ok) throw new Error("Erro ao buscar cargos");
 
         const cargos = await resposta.json();
@@ -66,8 +67,8 @@ async function carregarFuncionarios() {
     if (!tabela) return;
 
     try {
-        let resposta = await fetch("/api/funcionarios");
-        if (!resposta.ok) resposta = await fetch("/api/rh/funcionarios");
+        let resposta = await fetch(`${API_URL}/api/funcionarios`);
+        if (!resposta.ok) resposta = await fetch(`${API_URL}/api/rh/funcionarios`);
         if (!resposta.ok) throw new Error("Erro ao buscar funcionários");
 
         const funcionarios = await resposta.json();
@@ -146,7 +147,7 @@ async function salvarFuncionario() {
             adicional_tipo: document.getElementById("adicional_tipo").value
         };
 
-        let url = id ? `/api/funcionarios/${id}` : "/api/funcionarios";
+        let url = id ? `${API_URL}/api/funcionarios/${id}` : `${API_URL}/api/funcionarios`;
         let metodo = id ? "PUT" : "POST";
 
         let resposta = await fetch(url, {
@@ -156,7 +157,7 @@ async function salvarFuncionario() {
         });
 
         if (resposta.status === 404) {
-            url = id ? `/api/rh/funcionarios/${id}` : "/api/rh/funcionarios";
+            url = id ? `${API_URL}/api/rh/funcionarios/${id}` : `${API_URL}/api/rh/funcionarios`;
             resposta = await fetch(url, {
                 method: metodo,
                 headers: { "Content-Type": "application/json" },
