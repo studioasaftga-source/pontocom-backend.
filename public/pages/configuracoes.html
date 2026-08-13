@@ -18,6 +18,7 @@
             --brand-green: #10b981;
             --brand-purple: #a855f7;
             --brand-red: #f43f5e;
+            --brand-orange: #fb923c;
         }
 
         * {
@@ -50,31 +51,76 @@
             border-radius: 20px;
             padding: 28px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        /* Indicador de Status do Cofre no Topo do Card */
+        .status-cofre {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--brand-red);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .status-cofre.destravado {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--brand-green);
+            border-color: rgba(16, 185, 129, 0.3);
         }
 
         .section-title {
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--brand-blue);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .form-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
+        .form-grid-2 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
         @media (min-width: 768px) {
             .form-grid-2 { grid-template-columns: 1fr 1fr; }
+            .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
         }
 
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Estilização para o Fieldset Disabled (Bloqueio) */
+        fieldset {
+            border: none;
+            padding: 0;
+            margin: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        fieldset:disabled {
+            opacity: 0.6;
+        }
+
+        fieldset:disabled input, 
+        fieldset:disabled button {
+            cursor: not-allowed;
+        }
 
         input {
             width: 100%;
@@ -98,6 +144,10 @@
             border-radius: 12px;
         }
 
+        .input-with-icon { position: relative; display: flex; align-items: center; }
+        .input-with-icon input { padding-right: 40px; }
+        .input-with-icon span { position: absolute; right: 16px; color: var(--text-secondary); font-weight: 700; font-size: 13px; }
+
         .gps-actions { display: flex; align-items: center; justify-content: flex-start; margin-top: 12px; }
 
         .btn-gps {
@@ -114,25 +164,59 @@
             align-items: center;
             gap: 8px;
         }
-        .btn-gps:hover { background: rgba(168, 85, 247, 0.25); }
+        .btn-gps:hover:not(:disabled) { background: rgba(168, 85, 247, 0.25); }
+
+        /* Botões de Ação Final */
+        .btn-editar {
+            width: 100%;
+            max-width: 280px;
+            padding: 16px;
+            background: var(--bg-card-subtle);
+            color: var(--brand-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 28px;
+            transition: all 0.2s;
+        }
+        .btn-editar:hover { background: rgba(56, 189, 248, 0.1); }
 
         .btn-salvar {
             width: 100%;
             max-width: 280px;
             padding: 16px;
-            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #ffffff;
             border: none;
             border-radius: 14px;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             margin-top: 28px;
             transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+            display: none; /* Oculto inicialmente */
         }
-        .btn-salvar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35); }
+        .btn-salvar:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35); }
+        
         #status-msg { margin-top: 20px; font-size: 14px; font-weight: 600; }
+
+        /* Modal de Senha */
+        #modal-senha {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .modal-content h3 { color: var(--text-primary); margin-bottom: 8px; font-size: 18px; }
+        .modal-content p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+        .modal-content input { margin-bottom: 16px; text-align: center; font-size: 18px; letter-spacing: 2px; }
+        .modal-botoes { display: flex; gap: 10px; }
+        .modal-btn-cancelar { flex: 1; padding: 14px; background: var(--bg-card-subtle); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; font-weight: 700; }
+        .modal-btn-confirmar { flex: 1; padding: 14px; background: var(--brand-blue); color: #fff; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; }
+        #modal-erro { color: var(--brand-red); font-size: 12px; margin-bottom: 12px; font-weight: 600; display: none; }
     </style>
 </head>
 <body>
@@ -140,98 +224,181 @@
     <div class="page-container">
         <div class="header-page">
             <h1>⚙️ Parametrização do Sistema</h1>
-            <p>Configure a localização da sede, regras do app e a identidade visual (White-label).</p>
+            <p>Configure a localização da sede, regras operacionais e limites do aplicativo.</p>
         </div>
 
         <div class="config-card">
+            <!-- Indicador de Status -->
+            <div id="status-cofre" class="status-cofre">
+                🔒 Somente Leitura
+            </div>
+
             <form id="form-config" onsubmit="window.salvarConfiguracoesForm(event)">
                 
-                <div class="section-title">Identificação da Empresa</div>
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label>Nome da Empresa / Unidade</label>
-                    <input type="text" id="nome_empresa" required placeholder="Ex: Matriz São Paulo">
-                </div>
+                <!-- FIELDSET PARA BLOQUEAR TUDO FACILMENTE -->
+                <fieldset id="grupo-campos" disabled>
 
-                <!-- CONTATO E NOTIFICAÇÕES (FINANCEIRO / DONO) -->
-                <div class="section-title">📲 Contato e Notificações</div>
-                <div class="form-grid-2" style="margin-bottom: 24px;">
-                    <div class="form-group">
-                        <label>Responsável Financeiro / Dono</label>
-                        <input type="text" id="responsavel_financeiro" placeholder="Ex: João da Silva">
-                    </div>
-                    <div class="form-group">
-                        <label>WhatsApp / Contato Responsável Financeiro</label>
-                        <input type="tel" id="whatsapp_financeiro" placeholder="Ex: 11999998888 (Apenas números)">
-                    </div>
-                </div>
-
-                <!-- GEOLOCALIZAÇÃO -->
-                <div class="section-title">📍 Geolocalização & Cerca Virtual (Geofence)</div>
-                <div style="margin-bottom: 24px;">
-                    <div class="form-grid-2">
+                    <!-- IDENTIFICAÇÃO E CONTATO -->
+                    <div class="section-title" style="margin-top: 20px;">🏢 Identificação & Contato</div>
+                    <div class="form-grid-3" style="margin-bottom: 32px;">
                         <div class="form-group">
-                            <label>Latitude da Sede</label>
-                            <input type="number" step="any" id="latitude" required placeholder="-23.550520">
+                            <label>Nome da Empresa / Unidade</label>
+                            <input type="text" id="nome_empresa" required placeholder="Ex: Matriz São Paulo">
                         </div>
                         <div class="form-group">
-                            <label>Longitude da Sede</label>
-                            <input type="number" step="any" id="longitude" required placeholder="-46.633308">
+                            <label>Responsável Financeiro / Gestor</label>
+                            <input type="text" id="responsavel_financeiro" placeholder="Ex: João da Silva">
                         </div>
-                    </div>
-                    <div class="gps-actions">
-                        <button type="button" onclick="window.capturarGPS(event)" class="btn-gps">
-                            📍 Usar minha localização atual como Sede
-                        </button>
-                    </div>
-                </div>
-
-                <!-- REGRAS DE REGISTRO DE PONTO -->
-                <div class="section-title">⏱️ Regras de Registro de Ponto</div>
-                <div class="form-grid-2" style="margin-bottom: 24px;">
-                    <div class="form-group">
-                        <label>Raio de Tolerância GPS (Metros)</label>
-                        <input type="number" id="raio_tolerancia_metros" required placeholder="100">
-                    </div>
-                    <div class="form-group">
-                        <label>Trava Anti-Duplicidade (Minutos)</label>
-                        <input type="number" id="intervalo_minimo_minutos" required placeholder="15">
-                    </div>
-                </div>
-
-                <!-- IDENTIDADE VISUAL -->
-                <div class="section-title">🎨 Identidade Visual (Cores)</div>
-                <div class="form-grid-2" style="margin-bottom: 24px;">
-                    <div class="form-group">
-                        <label>Cor Primária (Botões Principais)</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="color" id="picker_primaria" value="#38bdf8" oninput="document.getElementById('cor_primaria').value = this.value.toUpperCase()">
-                            <input type="text" id="cor_primaria" placeholder="Ex: #38bdf8" maxlength="30" style="flex: 1;">
+                        <div class="form-group">
+                            <label>WhatsApp Financeiro</label>
+                            <input type="tel" id="whatsapp_financeiro" placeholder="Apenas números">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Cor Secundária (Menus e Fundos)</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="color" id="picker_secundaria" value="#151c2c" oninput="document.getElementById('cor_secundaria').value = this.value.toUpperCase()">
-                            <input type="text" id="cor_secundaria" placeholder="Ex: #151c2c" maxlength="30" style="flex: 1;">
+                    <!-- SEGURANÇA DA SENHA DO GESTOR -->
+                    <div class="section-title">🔐 Segurança do Painel</div>
+                    <div class="form-grid-2" style="margin-bottom: 32px;">
+                        <div class="form-group">
+                            <label>Nova Senha do Gestor (Deixe em branco para manter a atual)</label>
+                            <input type="password" id="input_nova_senha" placeholder="••••••••">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Cor de Destaque (Avisos e Ícones)</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="color" id="picker_destaque" value="#10b981" oninput="document.getElementById('cor_destaque').value = this.value.toUpperCase()">
-                            <input type="text" id="cor_destaque" placeholder="Ex: #10b981" maxlength="30" style="flex: 1;">
+                    <!-- REGRAS DE PONTO E JORNADA -->
+                    <div class="section-title">⏱️ Regras de Ponto e Jornada</div>
+                    <div class="form-grid-3" style="margin-bottom: 32px;">
+                        <div class="form-group">
+                            <label title="Distância máxima permitida da sede para bater ponto">Raio GPS Permitido</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="raio_tolerancia_metros" required placeholder="100">
+                                <span>M</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label title="Tempo mínimo entre uma batida e outra para evitar cliques duplos">Trava Anti-Duplicidade</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="intervalo_minimo_minutos" required placeholder="15">
+                                <span>MIN</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label title="Minutos aceitáveis após o horário antes de gerar advertência/corte">Tolerância de Atraso</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="tolerancia_atraso_minutos" required placeholder="10">
+                                <span>MIN</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                    <button type="submit" class="btn-salvar">Salvar Configurações</button>
+                    <!-- REGRAS DE BENEFÍCIOS (VALES) -->
+                    <div class="section-title">💸 Regras de Benefícios (Vales e VA)</div>
+                    <div class="form-grid-2" style="margin-bottom: 32px;">
+                        <div class="form-group">
+                            <label>Teto Máximo de Vale</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="porcentagem_max_vale" required placeholder="40" max="100" min="1">
+                                <span>%</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Atrasos para perder o V.A.</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="limite_atrasos_beneficio" required placeholder="3">
+                                <span>DIAS</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid-2" style="margin-bottom: 32px;">
+                        <div class="form-group">
+                            <label>Início das Solicitações (Dia do Mês)</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="vale_dia_inicio" required placeholder="15" max="31" min="1">
+                                <span>DIA</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Fim das Solicitações (Dia do Mês)</label>
+                            <div class="input-with-icon">
+                                <input type="number" id="vale_dia_fim" required placeholder="20" max="31" min="1">
+                                <span>DIA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GEOLOCALIZAÇÃO -->
+                    <div class="section-title">📍 Cerca Virtual (Geofence da Sede)</div>
+                    <div style="margin-bottom: 32px;">
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label>Latitude da Sede</label>
+                                <input type="number" step="any" id="latitude" required placeholder="-23.550520">
+                            </div>
+                            <div class="form-group">
+                                <label>Longitude da Sede</label>
+                                <input type="number" step="any" id="longitude" required placeholder="-46.633308">
+                            </div>
+                        </div>
+                        <div class="gps-actions">
+                            <button type="button" onclick="window.capturarGPS(event)" class="btn-gps">
+                                📍 Capturar Coordenadas Atuais
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- IDENTIDADE VISUAL -->
+                    <div class="section-title">🎨 White-label (Cores do App)</div>
+                    <div class="form-grid-3" style="margin-bottom: 24px;">
+                        <div class="form-group">
+                            <label>Cor Primária</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="color" id="picker_primaria" value="#38bdf8" oninput="document.getElementById('cor_primaria').value = this.value.toUpperCase()">
+                                <input type="text" id="cor_primaria" placeholder="#38BDF8" maxlength="30" style="flex: 1;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cor Secundária</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="color" id="picker_secundaria" value="#151c2c" oninput="document.getElementById('cor_secundaria').value = this.value.toUpperCase()">
+                                <input type="text" id="cor_secundaria" placeholder="#151C2C" maxlength="30" style="flex: 1;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cor de Destaque</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="color" id="picker_destaque" value="#10b981" oninput="document.getElementById('cor_destaque').value = this.value.toUpperCase()">
+                                <input type="text" id="cor_destaque" placeholder="#10B981" maxlength="30" style="flex: 1;">
+                            </div>
+                        </div>
+                    </div>
+
+                </fieldset>
+
+                <!-- Área de Botões de Ação (Fora do Fieldset) -->
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <button type="button" id="btn-editar" class="btn-editar" onclick="abrirModalSenha()">🔓 Habilitar Edição</button>
+                    <button type="submit" id="btn-salvar" class="btn-salvar">💾 Salvar Parametrização</button>
                     <div id="status-msg"></div>
                 </div>
 
             </form>
+        </div>
+    </div>
+
+    <!-- Modal de Senha do Gestor -->
+    <div id="modal-senha">
+        <div class="modal-content">
+            <div style="font-size: 32px; margin-bottom: 10px;">🔐</div>
+            <h3>Área Restrita</h3>
+            <p>Insira a Senha Master do Gestor para alterar as regras do sistema.</p>
+            
+            <div id="modal-erro">Senha incorreta. Tente novamente.</div>
+            
+            <input type="password" id="senha_gestor" placeholder="••••••••" onkeypress="if(event.key === 'Enter') verificarSenha()">
+            
+            <div class="modal-botoes">
+                <button type="button" class="modal-btn-cancelar" onclick="fecharModalSenha()">Cancelar</button>
+                <button type="button" class="modal-btn-confirmar" onclick="verificarSenha()">Autorizar</button>
+            </div>
         </div>
     </div>
 
@@ -241,21 +408,63 @@
                 ? 'http://localhost:3000/api/configuracoes' 
                 : '/api/configuracoes';
 
-            // FUNÇÃO GLOBAL DE CAPTURA DE GPS
+            let senhaSalvaNoBanco = 'admin123'; // Padrão inicial
+
+            // --- LÓGICA DE SEGURANÇA (MODO COFRE) ---
+            window.abrirModalSenha = function() {
+                document.getElementById('senha_gestor').value = '';
+                document.getElementById('modal-erro').style.display = 'none';
+                document.getElementById('modal-senha').style.display = 'flex';
+                setTimeout(() => document.getElementById('senha_gestor').focus(), 100);
+            };
+
+            window.fecharModalSenha = function() {
+                document.getElementById('modal-senha').style.display = 'none';
+            };
+
+            window.verificarSenha = function() {
+                const senhaInput = document.getElementById('senha_gestor').value;
+                
+                // Valida contra a senha puxada do banco de dados (ou admin123 como fallback)
+                if (senhaInput === (senhaSalvaNoBanco || 'admin123')) {
+                    fecharModalSenha();
+                    destravarPainel();
+                } else {
+                    document.getElementById('modal-erro').style.display = 'block';
+                }
+            };
+
+            function destravarPainel() {
+                document.getElementById('grupo-campos').disabled = false;
+                document.getElementById('btn-editar').style.display = 'none';
+                document.getElementById('btn-salvar').style.display = 'block';
+                
+                const statusCofre = document.getElementById('status-cofre');
+                statusCofre.className = 'status-cofre destravado';
+                statusCofre.innerHTML = '🔓 Edição Liberada';
+            }
+
+            function travarPainel() {
+                document.getElementById('grupo-campos').disabled = true;
+                document.getElementById('btn-editar').style.display = 'block';
+                document.getElementById('btn-salvar').style.display = 'none';
+                
+                const statusCofre = document.getElementById('status-cofre');
+                statusCofre.className = 'status-cofre';
+                statusCofre.innerHTML = '🔒 Somente Leitura';
+            }
+            // ----------------------------------------
+
             window.capturarGPS = function(event) {
                 if(event) event.preventDefault();
                 
                 const msg = document.getElementById('status-msg');
                 if (msg) {
                     msg.style.color = 'var(--brand-purple)';
-                    msg.innerText = '📡 Solicitando GPS... Por favor, autorize no navegador se solicitado.';
+                    msg.innerText = '📡 Buscando satélites...';
                 }
 
                 if (!navigator.geolocation) {
-                    if (msg) {
-                        msg.style.color = 'var(--brand-red)';
-                        msg.innerText = '❌ Erro: Seu navegador não suporta geolocalização.';
-                    }
                     alert("Seu navegador não suporta a função de GPS.");
                     return;
                 }
@@ -265,59 +474,60 @@
                         const lat = posicao.coords.latitude;
                         const lng = posicao.coords.longitude;
 
-                        const inputLat = document.getElementById('latitude');
-                        const inputLng = document.getElementById('longitude');
-
-                        if(inputLat) inputLat.value = lat;
-                        if(inputLng) inputLng.value = lng;
+                        if(document.getElementById('latitude')) document.getElementById('latitude').value = lat;
+                        if(document.getElementById('longitude')) document.getElementById('longitude').value = lng;
 
                         if (msg) {
                             msg.style.color = 'var(--brand-green)';
-                            msg.innerText = `✓ Localização capturada! (Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)})`;
+                            msg.innerText = `✓ Localização capturada!`;
                         }
                     },
                     (erro) => {
                         console.error("Erro GPS:", erro);
-                        let detalhe = "Erro desconhecido ao obter GPS.";
-                        if (erro.code === 1) detalhe = "Permissão de GPS negada no navegador. Habilite a localização nas configurações do site.";
-                        if (erro.code === 2) detalhe = "Sinal de GPS indisponível.";
-                        if (erro.code === 3) detalhe = "Tempo limite excedido ao buscar GPS.";
-
                         if (msg) {
                             msg.style.color = 'var(--brand-red)';
-                            msg.innerText = `❌ ${detalhe}`;
+                            msg.innerText = `❌ Erro ao buscar GPS. Verifique permissões.`;
                         }
-                        alert(detalhe);
                     },
                     { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
                 );
             };
 
-            // FUNÇÃO GLOBAL DE CARREGAR FORMULÁRIO
             window.carregarConfiguracoesForm = async function() {
                 try {
                     const res = await fetch(API_URL);
                     if (res.ok) {
                         const data = await res.json();
                         if (data && Object.keys(data).length > 0) {
-                            if(document.getElementById('nome_empresa')) document.getElementById('nome_empresa').value = data.nome_empresa || '';
-                            if(document.getElementById('responsavel_financeiro')) document.getElementById('responsavel_financeiro').value = data.responsavel_financeiro || '';
-                            if(document.getElementById('whatsapp_financeiro')) document.getElementById('whatsapp_financeiro').value = data.whatsapp_financeiro || '';
+                            // Salva a senha que veio do banco na memória do script
+                            if (data.senha_gestor) {
+                                senhaSalvaNoBanco = data.senha_gestor;
+                            }
 
-                            if(document.getElementById('latitude')) document.getElementById('latitude').value = data.latitude ?? '';
-                            if(document.getElementById('longitude')) document.getElementById('longitude').value = data.longitude ?? '';
-                            if(document.getElementById('raio_tolerancia_metros')) document.getElementById('raio_tolerancia_metros').value = data.raio_tolerancia_metros || 100;
-                            if(document.getElementById('intervalo_minimo_minutos')) document.getElementById('intervalo_minimo_minutos').value = data.intervalo_minimo_minutos || 15;
+                            document.getElementById('nome_empresa').value = data.nome_empresa || '';
+                            document.getElementById('responsavel_financeiro').value = data.responsavel_financeiro || '';
+                            document.getElementById('whatsapp_financeiro').value = data.whatsapp_financeiro || '';
+
+                            document.getElementById('latitude').value = data.latitude ?? '';
+                            document.getElementById('longitude').value = data.longitude ?? '';
+                            document.getElementById('raio_tolerancia_metros').value = data.raio_tolerancia_metros || 100;
+                            document.getElementById('intervalo_minimo_minutos').value = data.intervalo_minimo_minutos || 15;
                             
-                            if(data.cor_primaria && document.getElementById('cor_primaria')) {
+                            document.getElementById('tolerancia_atraso_minutos').value = data.tolerancia_atraso_minutos || 10;
+                            document.getElementById('porcentagem_max_vale').value = data.porcentagem_max_vale || 40;
+                            document.getElementById('limite_atrasos_beneficio').value = data.limite_atrasos_beneficio || 3;
+                            document.getElementById('vale_dia_inicio').value = data.vale_dia_inicio || 15;
+                            document.getElementById('vale_dia_fim').value = data.vale_dia_fim || 20;
+                            
+                            if(data.cor_primaria) {
                                 document.getElementById('cor_primaria').value = data.cor_primaria;
                                 if(data.cor_primaria.startsWith('#')) document.getElementById('picker_primaria').value = data.cor_primaria;
                             }
-                            if(data.cor_secundaria && document.getElementById('cor_secundaria')) {
+                            if(data.cor_secundaria) {
                                 document.getElementById('cor_secundaria').value = data.cor_secundaria;
                                 if(data.cor_secundaria.startsWith('#')) document.getElementById('picker_secundaria').value = data.cor_secundaria;
                             }
-                            if(data.cor_destaque && document.getElementById('cor_destaque')) {
+                            if(data.cor_destaque) {
                                 document.getElementById('cor_destaque').value = data.cor_destaque;
                                 if(data.cor_destaque.startsWith('#')) document.getElementById('picker_destaque').value = data.cor_destaque;
                             }
@@ -328,7 +538,6 @@
                 }
             };
 
-            // FUNÇÃO GLOBAL DE SALVAR
             window.salvarConfiguracoesForm = async function(e) {
                 if(e) e.preventDefault();
                 const msg = document.getElementById('status-msg');
@@ -337,6 +546,8 @@
                     msg.innerText = 'Salvando configurações...';
                 }
 
+                const novaSenha = document.getElementById('input_nova_senha').value.trim();
+
                 const payload = {
                     nome_empresa: document.getElementById('nome_empresa').value,
                     responsavel_financeiro: document.getElementById('responsavel_financeiro').value.trim(),
@@ -344,13 +555,25 @@
                     
                     latitude: parseFloat(document.getElementById('latitude').value),
                     longitude: parseFloat(document.getElementById('longitude').value),
+                    
                     raio_tolerancia_metros: parseInt(document.getElementById('raio_tolerancia_metros').value),
                     intervalo_minimo_minutos: parseInt(document.getElementById('intervalo_minimo_minutos').value),
+                    tolerancia_atraso_minutos: parseInt(document.getElementById('tolerancia_atraso_minutos').value),
+                    porcentagem_max_vale: parseInt(document.getElementById('porcentagem_max_vale').value),
+                    limite_atrasos_beneficio: parseInt(document.getElementById('limite_atrasos_beneficio').value),
+                    vale_dia_inicio: parseInt(document.getElementById('vale_dia_inicio').value),
+                    vale_dia_fim: parseInt(document.getElementById('vale_dia_fim').value),
                     
                     cor_primaria: document.getElementById('cor_primaria').value.trim(),
                     cor_secundaria: document.getElementById('cor_secundaria').value.trim(),
                     cor_destaque: document.getElementById('cor_destaque').value.trim()
                 };
+
+                // Só manda a senha se o gestor preencheu o campo de nova senha
+                if (novaSenha) {
+                    payload.senha_gestor = novaSenha;
+                    senhaSalvaNoBanco = novaSenha; // Atualiza na memória local
+                }
 
                 try {
                     const res = await fetch(API_URL, {
@@ -362,8 +585,10 @@
                     if (res.ok) {
                         if(msg) {
                             msg.style.color = 'var(--brand-green)';
-                            msg.innerText = '✓ Configurações salvas com sucesso!';
+                            msg.innerText = '✓ Regras atualizadas com sucesso!';
                         }
+                        document.getElementById('input_nova_senha').value = ''; // Limpa o campo de senha
+                        setTimeout(travarPainel, 1500); 
                     } else {
                         if(msg) {
                             msg.style.color = 'var(--brand-red)';
@@ -373,7 +598,7 @@
                 } catch (err) {
                     if(msg) {
                         msg.style.color = 'var(--brand-red)';
-                        msg.innerText = 'Erro de conexão com o servidor.';
+                        msg.innerText = 'Erro de conexão com o banco de dados.';
                     }
                 }
             };
@@ -382,6 +607,5 @@
             window.carregarConfiguracoesForm();
         })();
     </script>
-    <script src="/js/tema.js"></script>
 </body>
 </html>

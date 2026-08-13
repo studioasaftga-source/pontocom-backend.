@@ -53,7 +53,7 @@
         <div class="form-grid">
             <div class="campo">
                 <label>Cargo *</label>
-                <select id="cargo_id">
+                <select id="cargo_id" required>
                     <option value="">Carregando cargos...</option>
                 </select>
             </div>
@@ -89,13 +89,12 @@
         <div class="form-grid">
             <div class="campo">
                 <label>Salário Base (R$) *</label>
-                <!-- CORRIGIDO AQUI: type="text" para não quebrar a formatação -->
                 <input type="text" id="salario_base" placeholder="Ex: 2500,00">
             </div>
 
             <div class="campo">
-                <label>Carga Horária Mensal (Horas)</label>
-                <input type="number" id="carga_horaria_mensal" value="220">
+                <label>Carga Horária Mensal (Definida pelo Cargo)</label>
+                <input type="number" id="carga_horaria_mensal" value="220" readonly style="background-color: #1e293b; color: #94a3b8; cursor: not-allowed;">
             </div>
 
             <div class="campo">
@@ -188,6 +187,9 @@
 
 </div>
 
-<!-- LOGICA JS COMPLETA (CORRIGIDA A IMPORTAÇÃO) -->
-<script src="/js/funcionarios.js"></script>
-<script src="/js/tema.js"></script>
+<!-- Execução Inline garantida para SPA -->
+<script>
+    if (typeof inicializarTelaFuncionarios === 'function') {
+        inicializarTelaFuncionarios();
+    }
+</script>

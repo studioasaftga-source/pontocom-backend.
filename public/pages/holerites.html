@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holerites - PontoCom RH</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-principal: #0f1218;
+            --bg-card: #191f2c;
+            --bg-card-subtle: #222938;
+            --borda: rgba(255, 255, 255, 0.08);
+            --texto-principal: #ffffff;
+            --texto-secundario: #94a3b8;
+            --laranja: #f97316;
+            --laranja-hover: #ea580c;
+            --verde: #10b981;
+            --sombra: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg-principal);
+            color: var(--texto-principal);
+            overflow-x: hidden;
+        }
+
+        /* Container ajustado para encaixar ao lado do menu lateral gerado pelo sistema */
+        .main-container {
+            margin-left: 240px; 
+            min-height: 100vh;
+            padding: 30px;
+            width: calc(100% - 240px);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--sombra);
+        }
+
+        .titulo-area {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .titulo-icone {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--laranja);
+            border-radius: 10px;
+            font-size: 21px;
+        }
+
+        .titulo-area h1 {
+            font-size: 21px;
+            font-weight: 800;
+            color: var(--texto-principal);
+        }
+
+        .titulo-area span {
+            display: block;
+            margin-top: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--texto-secundario);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: var(--sombra);
+        }
+
+        .card-header {
+            margin-bottom: 26px;
+        }
+
+        .card-header h2 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--texto-principal);
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            max-width: 950px;
+            color: var(--texto-secundario);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .filtros-container {
+            display: grid;
+            grid-template-columns: minmax(170px, 0.8fr) minmax(120px, 0.5fr) minmax(280px, 1.8fr) auto;
+            gap: 18px;
+            align-items: end;
+            padding: 22px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--texto-secundario);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        select, input {
+            width: 100%;
+            height: 44px;
+            padding: 0 13px;
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            background: var(--bg-principal);
+            color: var(--texto-principal);
+            font-size: 13px;
+            font-weight: 500;
+            outline: none;
+            transition: all .2s ease;
+        }
+
+        select:hover, input:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        select:focus, input:focus {
+            border-color: var(--laranja);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, .15);
+        }
+
+        select option {
+            background: var(--bg-card);
+            color: var(--texto-principal);
+        }
+
+        .btn-gerar {
+            height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 22px;
+            border: none;
+            border-radius: 8px;
+            background: var(--laranja);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 5px 14px rgba(249, 115, 22, .25);
+            transition: all .2s ease;
+        }
+
+        .btn-gerar:hover {
+            background: var(--laranja-hover);
+            transform: translateY(-1px);
+        }
+
+        .info-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 20px;
+            padding: 15px 17px;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 10px;
+            background: rgba(249, 115, 22, 0.05);
+        }
+
+        .info-box p {
+            color: #fdba74;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 1100px) {
+            .filtros-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            .funcionario-group, .botao-group {
+                grid-column: 1 / -1;
+            }
+            .btn-gerar {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .main-container {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px 15px 40px;
+            }
+            .filtros-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <header class="page-header">
+            <div class="titulo-area">
+                <div class="titulo-icone">🧾</div>
+                <div>
+                    <h1>Gestão e Emissão de Holerites</h1>
+                    <span>Emissão de holerites por competência e funcionário</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="card">
+                <div class="card-header">
+                    <h2>Emissão de Holerites (2 Vias por Folha A4)</h2>
+                    <p>
+                        Selecione a competência (Mês e Ano) e escolha o funcionário para emitir o holerite individualmente ou selecione <strong>Todos os funcionários</strong> para gerar em lote com corte automático.
+                    </p>
+                </div>
+
+                <div class="filtros-container">
+                    <div class="form-group">
+                        <label for="selectMesHolerite">Mês de Competência</label>
+                        <select id="selectMesHolerite">
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8" selected>Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="selectAnoHolerite">Ano</label>
+                        <input type="number" id="selectAnoHolerite" value="2026" min="2000" max="2100">
+                    </div>
+
+                    <div class="form-group funcionario-group">
+                        <label for="selectFuncionarioHolerite">Funcionário</label>
+                        <select id="selectFuncionarioHolerite">
+                            <option value="">Carregando funcionários...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group botao-group">
+                        <button type="button" class="btn-gerar" onclick="gerarHoleritesComFiltro()">
+                            🖨️ Gerar Documento
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-icone">ℹ️</div>
+                    <p>
+                        O sistema gera automaticamente duas vias idênticas por folha A4 (Via do Empregado e Via da Empresa) com linha pontilhada para corte, garantindo o padrão exigido para a assinatura física.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/rh.js"></script>
+</body>
+</html>

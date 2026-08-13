@@ -32,7 +32,8 @@
 <div class="conteudo-empresa">
     <h2>Dados da Empresa</h2>
     
-    <form id="formEmpresa" onsubmit="event.preventDefault(); salvarDadosEmpresa();">
+    <!-- MUDANÇA AQUI: Removido o onsubmit -->
+    <form id="formEmpresa">
         <input type="hidden" id="empresaId">
 
         <h3>Informações Principais</h3>
@@ -108,4 +109,5 @@
 
 </body>
 <script src="/js/tema.js"></script>
+<script src="/js/empresa.js"></script>
 </html>

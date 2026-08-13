@@ -1,39 +1,18 @@
+// =====================================
+// PONTOCOM RH - CARGOS
+// =====================================
+
 let listaCargosGlobal = [];
 let cargoEmEdicaoId = null;
 
-// Executa ao carregar a página
-document.addEventListener("DOMContentLoaded", () => {
-    carregarListaCBOs();
+// =====================================
+// INICIALIZAÇÃO DA TELA
+// =====================================
+function inicializarTelaCargos() {
     carregarListaCargos();
-});
-
-// 1. CARREGA A TABELA OFICIAL DE CBOs NO SELECT/DATALIST
-async function carregarListaCBOs() {
-    const dataList = document.getElementById('listaCBO');
-    if (!dataList) return;
-
-    try {
-        let resposta = await fetch('/api/cbo');
-        if (!resposta.ok) resposta = await fetch('/api/rh/cbo');
-
-        if (resposta.ok) {
-            const cbos = await resposta.json();
-            dataList.innerHTML = '';
-            
-            cbos.forEach(cbo => {
-                const option = document.createElement('option');
-                const codigo = cbo.codigo || cbo.cbo;
-                const nome = cbo.nome || cbo.descricao;
-                option.value = `${codigo} - ${nome}`;
-                dataList.appendChild(option);
-            });
-        }
-    } catch (erro) {
-        console.error("Erro ao carregar lista oficial de CBOs:", erro);
-    }
 }
 
-// 2. BUSCA OS CARGOS CADASTRADOS E MONTA A TABELA ABAIXO
+// 1. BUSCA OS CARGOS CADASTRADOS E MONTA A TABELA ABAIXO
 async function carregarListaCargos() {
     const tbody = document.getElementById('tabelaCargosBody');
     if (!tbody) return;
@@ -44,21 +23,21 @@ async function carregarListaCargos() {
 
         if (resposta.ok) {
             const cargos = await resposta.json();
-            listaCargosGlobal = cargos;
+            listaCargosGlobal = Array.isArray(cargos) ? cargos : [];
             tbody.innerHTML = '';
 
-            if (cargos.length === 0) {
+            if (listaCargosGlobal.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum cargo cadastrado.</td></tr>';
                 return;
             }
 
-            cargos.forEach(cargo => {
+            listaCargosGlobal.forEach(cargo => {
                 const entrada = cargo.hora_entrada ? cargo.hora_entrada.substring(0, 5) : '--:--';
                 const saida = cargo.hora_saida ? cargo.hora_saida.substring(0, 5) : '--:--';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${cargo.nome_interno || cargo.nome}</strong></td>
+                        <td><strong>${cargo.nome || cargo.nome_interno}</strong></td>
                         <td>${cargo.cbo || 'Sem CBO'}</td>
                         <td>${cargo.carga_horaria ? cargo.carga_horaria + 'h/mês' : '--'}</td>
                         <td><small>${entrada} às ${saida}</small></td>
@@ -76,7 +55,7 @@ async function carregarListaCargos() {
     }
 }
 
-// 3. PREENCHE O FORMULÁRIO QUANDO CLICA EM EDITAR
+// 2. PREENCHE O FORMULÁRIO QUANDO CLICA EM EDITAR
 function editarCargo(id) {
     const cargo = listaCargosGlobal.find(c => c.id === id);
     if (!cargo) return;
@@ -85,11 +64,11 @@ function editarCargo(id) {
 
     const formatarHora = (hora) => hora ? hora.substring(0, 5) : '';
 
-    document.getElementById('nomeCargo').value = cargo.nome_interno || cargo.nome || '';
+    document.getElementById('nomeCargo').value = cargo.nome || cargo.nome_interno || '';
     document.getElementById('cboCargo').value = cargo.cbo || '';
     document.getElementById('horaEntrada').value = formatarHora(cargo.hora_entrada);
-    document.getElementById('horaSaidaAlmoco').value = formatarHora(cargo.hora_saida_almoco);
-    document.getElementById('horaRetornoAlmoco').value = formatarHora(cargo.hora_retorno_almoco);
+    document.getElementById('horaSaidaAlmoco').value = formatarHora(cargo.saida_almoco || cargo.hora_saida_almoco);
+    document.getElementById('horaRetornoAlmoco').value = formatarHora(cargo.retorno_almoco || cargo.hora_retorno_almoco);
     document.getElementById('horaSaida').value = formatarHora(cargo.hora_saida);
     document.getElementById('cargaHoraria').value = cargo.carga_horaria || '';
 
@@ -102,7 +81,7 @@ function editarCargo(id) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// 4. SALVA (POST) OU ATUALIZA (PUT) O CARGO
+// 3. SALVA (POST) OU ATUALIZA (PUT) O CARGO
 async function salvarCargo(event) {
     event.preventDefault();
 
@@ -120,11 +99,20 @@ async function salvarCargo(event) {
     const method = cargoEmEdicaoId ? 'PUT' : 'POST';
 
     try {
-        const resposta = await fetch(url, {
+        let resposta = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
+        if (!resposta.ok && resposta.status === 404) {
+            const urlAlt = cargoEmEdicaoId ? `/api/rh/cargos/${cargoEmEdicaoId}` : '/api/rh/cargos';
+            resposta = await fetch(urlAlt, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
 
         if (resposta.ok) {
             alert(cargoEmEdicaoId ? "Cargo atualizado com sucesso!" : "Cargo cadastrado com sucesso!");
@@ -149,16 +137,20 @@ async function salvarCargo(event) {
     }
 }
 
-// 5. EXCLUI O CARGO
+// 4. EXCLUI O CARGO
 async function deletarCargo(id) {
     if (!confirm("Tem certeza que deseja excluir este cargo?")) return;
 
     try {
-        const resposta = await fetch(`/api/cargos/${id}`, { method: 'DELETE' });
-        const dados = await resposta.json();
+        let resposta = await fetch(`/api/cargos/${id}`, { method: 'DELETE' });
+
+        if (!resposta.ok && resposta.status === 404) {
+            resposta = await fetch(`/api/rh/cargos/${id}`, { method: 'DELETE' });
+        }
 
         if (!resposta.ok) {
-            alert(`⚠️ Atenção:\n\n${dados.erro || dados.mensagem}`);
+            const dados = await resposta.json().catch(() => ({}));
+            alert(`⚠️ Atenção:\n\n${dados.erro || dados.mensagem || "Erro ao excluir cargo."}`);
             return;
         }
 

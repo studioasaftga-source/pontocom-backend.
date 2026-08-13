@@ -1,228 +1,323 @@
 // ==========================================
-// FUNÇÕES DA TELA DE CONTROLE DE PONTO
+// FRONT-END: Lógica da Tela de Jornada (public/js/pontos.js)
 // ==========================================
 
-async function inicializarTelaPonto() {
+// Descobre sozinho onde o sistema está rodando (Render, Localhost, IP do Wifi)
+const API_URL = window.location.origin.includes('192.168')
+    ? 'http://192.168.1.8:3000/api'
+    : (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+        ? 'http://localhost:3000/api'
+        : '/api');
+
+// Pegamos o ID do Colaborador salvo no Login
+const funcionarioId = localStorage.getItem('funcionarioId') || localStorage.getItem('funcionario_id') || 1;
+const token = localStorage.getItem('token');
+const META_JORNADA_MINUTOS = 8 * 60; // 8 horas = 480 minutos
+
+const ROTULOS_PADRAO = [
+    '1. Entrada',
+    '2. Saída Almoço',
+    '3. Retorno Almoço',
+    '4. Saída'
+];
+
+const TEXTO_BOTAO_INTELIGENTE = {
+    'ENTRADA': 'Registrar Entrada',
+    'SAIDA_ALMOCO': 'Registrar Saída (Almoço)',
+    'RETORNO_ALMOCO': 'Registrar Retorno (Almoço)',
+    'SAIDA': 'Registrar Saída',
+    'ENCERRADO': 'Expediente Encerrado'
+};
+
+// 1. Relógio Digital na Tela
+function atualizarRelogio() {
+    const agora = new Date();
+    const relogio = document.getElementById('relogio-digital');
+    const dataAtual = document.getElementById('data-atual');
+
+    if (relogio && dataAtual) {
+        const h = String(agora.getHours()).padStart(2, '0');
+        const m = String(agora.getMinutes()).padStart(2, '0');
+        const s = String(agora.getSeconds()).padStart(2, '0');
+        relogio.innerText = `${h}:${m}:${s}`;
+        
+        const opcoes = { weekday: 'long', day: '2-digit', month: 'short' };
+        dataAtual.innerText = agora.toLocaleDateString('pt-BR', opcoes);
+    }
+}
+setInterval(atualizarRelogio, 1000);
+
+// 2. Carregar o Ponto de Hoje do Servidor
+async function carregarPontoHoje() {
+    const msgDiv = document.getElementById('mensagem-ponto');
+    const btn = document.getElementById('btn-ponto');
+
     try {
-        const resposta = await fetch('/api/funcionarios');
-        const funcionarios = await resposta.json();
+        const response = await fetch(`${API_URL}/ponto/hoje/${funcionarioId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+        });
         
-        const select = document.getElementById('selectFuncionario');
-        
-        if (funcionarios && funcionarios.length > 0) {
-            funcionarios.forEach(func => {
-                const option = document.createElement('option');
-                option.value = func.id;
-                option.textContent = `${func.nome} (CPF: ${func.cpf || 'N/A'})`;
-                select.appendChild(option);
-            });
+        if (response.ok) {
+            const motor = await response.json();
+            
+            renderizarGridBatidas(motor);
+            atualizarPainelProgresso(motor);
+
+            // Ajusta o nome do botão inteligente e bloqueia se já fez 4 batidas
+            if (btn) {
+                const qtd = motor.quantidade_batidas !== undefined ? motor.quantidade_batidas : (motor.marcacoes ? motor.marcacoes.length : 0);
+                
+                if (motor.proxima === 'ENCERRADO' || qtd >= 4) {
+                    btn.innerText = TEXTO_BOTAO_INTELIGENTE['ENCERRADO'];
+                    btn.disabled = true;
+                } else {
+                    const proximaFase = motor.proxima || 'ENTRADA';
+                    btn.innerText = TEXTO_BOTAO_INTELIGENTE[proximaFase] || 'Registrar Ponto Agora';
+                    btn.disabled = false;
+                }
+            }
+        } else {
+            renderizarGridVazia();
         }
-        
-        const hoje = new Date();
-        const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-        document.getElementById('inputMesAno').value = mesAtual;
-        
-        const botaoBuscar = document.getElementById('btnBuscarPonto');
-        if (botaoBuscar) {
-            botaoBuscar.addEventListener('click', buscarEspelhoPonto);
+    } catch (err) {
+        console.error("❌ Erro de comunicação com o servidor:", err);
+        if (msgDiv) {
+            msgDiv.style.color = 'var(--brand-red)';
+            msgDiv.innerText = 'Servidor indisponível.';
         }
-    } catch (erro) {
-        console.error("Erro ao carregar tela de ponto:", erro);
+        renderizarGridVazia();
     }
 }
 
-async function buscarEspelhoPonto() {
-    const funcionarioId = document.getElementById('selectFuncionario').value;
-    const mesAno = document.getElementById('inputMesAno').value; 
-    const tbody = document.getElementById('corpoTabelaPonto');
+// 3. Montar a Grade 2x2 com os Horários
+function renderizarGridBatidas(motor) {
+    const grid = document.getElementById('grid-batidas-hoje');
+    const txtQtd = document.getElementById('txt-qtd-batidas');
+    if (!grid) return;
+    
+    // Tenta pegar os valores do novo padrão ou do antigo
+    let vEntrada = motor.entrada || (motor.marcacoes && motor.marcacoes[0] ? motor.marcacoes[0].hora : null);
+    let vSaidaAlmoco = motor.saida_almoco || (motor.marcacoes && motor.marcacoes[1] ? motor.marcacoes[1].hora : null);
+    let vRetornoAlmoco = motor.retorno_almoco || (motor.marcacoes && motor.marcacoes[2] ? motor.marcacoes[2].hora : null);
+    let vSaida = motor.saida || (motor.marcacoes && motor.marcacoes[3] ? motor.marcacoes[3].hora : null);
 
-    if (!funcionarioId || !mesAno) {
-        alert("Por favor, selecione um funcionário e um mês/ano.");
+    const valoresHoras = [vEntrada, vSaidaAlmoco, vRetornoAlmoco, vSaida];
+    let htmlContent = '';
+
+    const qtd = motor.quantidade_batidas !== undefined ? motor.quantidade_batidas : (motor.marcacoes ? motor.marcacoes.length : 0);
+    if (txtQtd) txtQtd.innerText = `${qtd} Batidas`;
+
+    for (let i = 0; i < 4; i++) {
+        const rotulo = ROTULOS_PADRAO[i];
+        const horaFormatada = valoresHoras[i];
+
+        if (horaFormatada) {
+            htmlContent += `
+                <div class="batida-card registrada">
+                    <div class="batida-label">${rotulo}</div>
+                    <div class="batida-hora">${horaFormatada}</div>
+                </div>
+            `;
+        } else {
+            htmlContent += `
+                <div class="batida-card pendente">
+                    <div class="batida-label">${rotulo}</div>
+                    <div class="batida-hora">--:--</div>
+                </div>
+            `;
+        }
+    }
+    grid.innerHTML = htmlContent;
+}
+
+function renderizarGridVazia() {
+    renderizarGridBatidas({
+        entrada: null, saida_almoco: null, retorno_almoco: null, saida: null,
+        horas_trabalhadas: "00:00", horas_restantes: "08:00", quantidade_batidas: 0,
+        marcacoes: []
+    });
+}
+
+// 4. Preencher Barra de Progresso e Horas
+function atualizarPainelProgresso(motor) {
+    const horasTrabalhadas = motor.horas_trabalhadas || "00:00";
+    const horasRestantes = motor.horas_restantes || "08:00";
+
+    const txtTrab = document.getElementById('horas-trabalhadas-texto');
+    const txtRest = document.getElementById('horas-restantes-texto');
+    const barraFill = document.getElementById('progress-bar-fill');
+    const badgeSaldo = document.getElementById('badge-saldo-dia');
+
+    if (txtTrab) txtTrab.innerText = horasTrabalhadas;
+    if (txtRest) txtRest.innerText = horasRestantes;
+
+    const [h, m] = horasTrabalhadas.split(':').map(Number);
+    const minutosTrabalhados = (h * 60) + (m || 0);
+    const percentual = Math.min(Math.round((minutosTrabalhados / META_JORNADA_MINUTOS) * 100), 100);
+    
+    if (barraFill) barraFill.style.width = `${percentual}%`;
+
+    if (badgeSaldo) {
+        if (horasRestantes !== "00:00") {
+            badgeSaldo.innerText = `-${horasRestantes}`;
+            badgeSaldo.className = 'badge-saldo saldo-negativo';
+        } else {
+            badgeSaldo.innerText = `+00:00`;
+            badgeSaldo.className = 'badge-saldo saldo-positivo';
+        }
+    }
+}
+
+// 5. Iniciar o Registro e Pegar GPS
+async function iniciarRegistroPonto() {
+    const msgDiv = document.getElementById('mensagem-ponto');
+    const btn = document.getElementById('btn-ponto');
+
+    if (msgDiv) {
+        msgDiv.style.color = 'var(--brand-blue)';
+        msgDiv.innerText = '📍 Validando sua localização GPS...';
+    }
+    if (btn) btn.disabled = true;
+
+    if (!navigator.geolocation) {
+        if (msgDiv) {
+            msgDiv.style.color = 'var(--brand-red)';
+            msgDiv.innerText = '❌ Seu dispositivo não suporta geolocalização.';
+        }
+        if (btn) btn.disabled = false;
         return;
     }
 
-    const [ano, mes] = mesAno.split('-');
-    tbody.innerHTML = '<tr><td colspan="6">Carregando dados...</td></tr>';
+    navigator.geolocation.getCurrentPosition(
+        async (posicao) => {
+            await enviarRegistroPonto(posicao.coords.latitude, posicao.coords.longitude);
+            if (btn) btn.disabled = false;
+        },
+        async (erro) => {
+            console.warn("GPS Indisponível ou Bloqueado:", erro);
+            await enviarRegistroPonto(null, null); // Envia sem localização se falhar
+            if (btn) btn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+// 6. Enviar para a API o Ponto Batido
+async function enviarRegistroPonto(lat, lng) {
+    const msgDiv = document.getElementById('mensagem-ponto');
+    if (msgDiv) {
+        msgDiv.style.color = 'var(--brand-blue)';
+        msgDiv.innerText = 'Registrando marcação...';
+    }
 
     try {
-        const resposta = await fetch(`/api/ponto/${funcionarioId}/${mes}/${ano}`);
-        const registros = await resposta.json();
-
-        if (registros.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align:center;">Nenhum registro encontrado para este mês.</td></tr>';
-            return;
+        // Deduz qual a batida baseada no nome do botão para garantir a compatibilidade
+        const btn = document.getElementById('btn-ponto');
+        let tipoDeducido = 'ENTRADA';
+        if (btn) {
+            const btnText = btn.innerText;
+            if (btnText.includes('Almoço') && btnText.includes('Saída')) tipoDeducido = 'SAIDA_ALMOCO';
+            else if (btnText.includes('Retorno')) tipoDeducido = 'RETORNO_ALMOCO';
+            else if (btnText.includes('Saída')) tipoDeducido = 'SAIDA';
         }
 
-        const pontosPorDia = agruparPorDia(registros);
-        tbody.innerHTML = ''; 
+        const payload = {
+            funcionario_id: funcionarioId,
+            latitude: lat,
+            longitude: lng,
+            tipo: tipoDeducido 
+        };
 
-        Object.keys(pontosPorDia).forEach(data => {
-            const batidas = pontosPorDia[data];
-            const dataFormatada = data.split('-').reverse().join('/');
-
-            // Pega as horas ou deixa vazio
-            const b1 = batidas[0] ? extrairHora(batidas[0].data_hora) : '';
-            const b2 = batidas[1] ? extrairHora(batidas[1].data_hora) : '';
-            const b3 = batidas[2] ? extrairHora(batidas[2].data_hora) : '';
-            const b4 = batidas[3] ? extrairHora(batidas[3].data_hora) : '';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="padding: 10px;"><strong>${dataFormatada}</strong></td>
-                    <td>${b1 || '-'}</td>
-                    <td>${b2 || '-'}</td>
-                    <td>${b3 || '-'}</td>
-                    <td>${b4 || '-'}</td>
-                    <td>
-                        <button onclick="abrirModalAjuste('${data}', '${b1}', '${b2}', '${b3}', '${b4}')" class="btn-ajustar">Ajustar</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-    } catch (erro) {
-        console.error("Erro ao buscar espelho:", erro);
-        tbody.innerHTML = '<tr><td colspan="6" style="color: red; padding: 20px;">Erro ao buscar registros.</td></tr>';
-    }
-}
-
-function agruparPorDia(registros) {
-    return registros.reduce((grupo, registro) => {
-        let dataBruta = registro.data_registro || registro.data_hora;
-        let data = dataBruta.split('T')[0]; 
-        
-        if (!grupo[data]) grupo[data] = [];
-        grupo[data].push(registro);
-        return grupo;
-    }, {});
-}
-
-function extrairHora(dataHoraString) {
-    if (!dataHoraString) return '';
-    const dataObj = new Date(dataHoraString);
-    const horas = String(dataObj.getHours()).padStart(2, '0');
-    const minutos = String(dataObj.getMinutes()).padStart(2, '0');
-    return `${horas}:${minutos}`;
-}
-
-// ==========================================
-// FUNÇÕES DO MODAL MODERNO DE AJUSTE
-// ==========================================
-
-function abrirModalAjuste(data, b1, b2, b3, b4) {
-    const dataFormatada = data.split('-').reverse().join('/');
-
-    const modalHtml = `
-        <div id="modalAjusteOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;">
-            
-            <div style="background: #ffffff; width: 450px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); padding: 25px; transform: translateY(-20px); transition: transform 0.3s ease;" id="modalAjusteBox">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px;">
-                    <h2 style="margin: 0; font-size: 18px; color: #333;">Ajuste de Ponto - ${dataFormatada}</h2>
-                    <button onclick="fecharModalAjuste()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #888;">&times;</button>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                    <div>
-                        <label style="display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold;">Entrada</label>
-                        <input type="time" id="editB1" value="${b1}" onkeydown="mudarComEnter(event, 'editB2')" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold;">Saída Almoço</label>
-                        <input type="time" id="editB2" value="${b2}" onkeydown="mudarComEnter(event, 'editB3')" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold;">Volta Almoço</label>
-                        <input type="time" id="editB3" value="${b3}" onkeydown="mudarComEnter(event, 'editB4')" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: bold;">Saída</label>
-                        <input type="time" id="editB4" value="${b4}" onkeydown="mudarComEnter(event, 'btnSalvarAjuste')" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button onclick="fecharModalAjuste()" style="padding: 10px 18px; border: none; border-radius: 6px; background: #f1f1f1; color: #333; cursor: pointer; font-weight: bold;">Cancelar</button>
-                    <button id="btnSalvarAjuste" onclick="salvarEdicaoPonto('${data}')" style="padding: 10px 18px; border: none; border-radius: 6px; background: #0056b3; color: #fff; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,86,179,0.3);">Salvar Ajuste</button>
-                </div>
-
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Efeito de entrada suave + Foco no primeiro campo
-    setTimeout(() => {
-        document.getElementById('modalAjusteOverlay').style.opacity = '1';
-        document.getElementById('modalAjusteBox').style.transform = 'translateY(0)';
-        const inputB1 = document.getElementById('editB1');
-        if (inputB1) inputB1.focus();
-    }, 10);
-}
-
-function mudarComEnter(event, proximoId) {
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Impede o envio acidental de formulários padrão
-        const proximoElemento = document.getElementById(proximoId);
-        if (proximoElemento) {
-            proximoElemento.focus();
-            if (proximoElemento.tagName === 'BUTTON') {
-                proximoElemento.click(); // Se for o botão salvar, ele clica automaticamente
-            }
-        }
-    }
-}
-
-function fecharModalAjuste() {
-    const overlay = document.getElementById('modalAjusteOverlay');
-    if (overlay) {
-        overlay.style.opacity = '0';
-        document.getElementById('modalAjusteBox').style.transform = 'translateY(-20px)';
-        setTimeout(() => overlay.remove(), 300);
-    }
-}
-
-async function salvarEdicaoPonto(data) {
-    const funcionarioId = document.getElementById('selectFuncionario').value;
-    
-    const batidasEditadas = {
-        data_registro: data,
-        funcionario_id: funcionarioId,
-        b1: document.getElementById('editB1').value,
-        b2: document.getElementById('editB2').value,
-        b3: document.getElementById('editB3').value,
-        b4: document.getElementById('editB4').value
-    };
-
-    const btnSalvar = document.getElementById('btnSalvarAjuste') || event.target;
-    btnSalvar.innerText = "Salvando...";
-    btnSalvar.disabled = true;
-
-    try {
-        const resposta = await fetch('/api/ponto/ajustar', {
+        const response = await fetch(`${API_URL}/ponto`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             },
-            body: JSON.stringify(batidasEditadas)
+            body: JSON.stringify(payload)
         });
 
-        if (resposta.ok) {
-            alert("Ajuste de ponto salvo com sucesso!");
-            fecharModalAjuste();
-            buscarEspelhoPonto();
+        const resData = await response.json();
+
+        if (response.ok) {
+            if (msgDiv) {
+                msgDiv.style.color = 'var(--brand-green)';
+                msgDiv.innerText = `✓ Ponto registrado com sucesso!`;
+            }
+            await carregarPontoHoje(); 
         } else {
-            const erroMsg = await resposta.text();
-            alert("Erro ao salvar no banco: " + erroMsg);
+            if (msgDiv) {
+                msgDiv.style.color = 'var(--brand-red)';
+                msgDiv.innerText = resData.erro || 'Erro ao registrar ponto.';
+            }
+            await carregarPontoHoje();
         }
-    } catch (erro) {
-        console.error("Erro na comunicação com o servidor:", erro);
-        alert("Erro de conexão ao tentar salvar o ajuste.");
-    } finally {
-        if (btnSalvar) {
-            btnSalvar.innerText = "Salvar Ajuste";
-            btnSalvar.disabled = false;
+    } catch (err) {
+        console.error("Erro na requisição:", err);
+        if (msgDiv) {
+            msgDiv.style.color = 'var(--brand-red)';
+            msgDiv.innerText = 'Erro de comunicação com o servidor.';
         }
     }
 }
+
+// 7. Botão Reset Dev (Somente para Testes)
+async function resetarPontosHoje() {
+    if (!confirm('Deseja limpar todos os registros de ponto de hoje para testes?')) return;
+    const msgDiv = document.getElementById('mensagem-ponto');
+    
+    if (msgDiv) {
+        msgDiv.style.color = 'var(--brand-purple)';
+        msgDiv.innerText = '🔄 Resetando batidas do dia...';
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/ponto/reset-hoje?funcionarioId=${funcionarioId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            }
+        });
+
+        if (response.ok) {
+            if (msgDiv) {
+                msgDiv.style.color = 'var(--brand-green)';
+                msgDiv.innerText = '✓ Batidas zeradas com sucesso!';
+            }
+            carregarPontoHoje();
+        } else {
+            if (msgDiv) {
+                msgDiv.style.color = 'var(--brand-red)';
+                msgDiv.innerText = 'Erro ao resetar batidas.';
+            }
+        }
+    } catch (err) {
+        if (msgDiv) {
+            msgDiv.style.color = 'var(--brand-red)';
+            msgDiv.innerText = 'Erro de comunicação ao resetar.';
+        }
+    }
+}
+
+// ==========================================
+// INICIALIZAÇÃO QUANDO A PÁGINA CARREGA
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+    atualizarRelogio();
+    
+    const nomeColaborador = localStorage.getItem('funcionarioNome');
+    const spanNome = document.getElementById('nome-usuario');
+    if (spanNome && nomeColaborador) {
+        spanNome.innerText = nomeColaborador;
+    }
+    
+    // Se a tela tiver a div de batidas, carrega o ponto!
+    if (document.getElementById('grid-batidas-hoje')) {
+        carregarPontoHoje();
+    }
+});

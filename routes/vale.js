@@ -1,135 +1,446 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const pool = require('../database');
 
-// ==========================================
-// 1. SOLICITAÇÃO DE VALE (PWA)
-// ==========================================
-router.post('/solicitar', async (req, res) => {
-    const { funcionario_id, valor, justificativa } = req.body;
-    
-    const dataAtual = new Date();
-    const mes = dataAtual.getMonth() + 1;
-    const ano = dataAtual.getFullYear();
-    const dia = dataAtual.getDate();
+function vazio(valor) {
+    return valor === undefined || valor === "" ? null : valor;
+}
 
-    // Regra 1: Bloqueio de data por segurança no backend (Dias 15 a 20)
-    //if (dia < 15 || dia > 20) {
-    //     return res.status(403).json({ erro: "As solicitações de vale só são permitidas entre os dias 15 e 20." });
-    // }
+// ======================================================
+// 1. GET /api/vale/pendentes
+// Busca os vales pendentes + dados do funcionário
+// incluindo PIX e telefone
+// ======================================================
+router.get('/pendentes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                v.id,
+
+                -- Dados do funcionário
+                v.funcionario_id,
+                COALESCE(f.nome, 'Colaborador Sem Nome') AS colaborador,
+                COALESCE(f.nome, 'Colaborador Sem Nome') AS nome,
+                COALESCE(f.nome, 'Colaborador Sem Nome') AS funcionario_nome,
+
+                -- Dados financeiros e do vale
+                v.valor,
+                COALESCE(v.justificativa, '') AS motivo,
+                v.status,
+                v.data_solicitacao,
+
+                -- Dados necessários para WhatsApp / Financeiro
+                COALESCE(f.pix, '') AS pix,
+                COALESCE(f.pix, '') AS chave_pix,
+
+                COALESCE(f.telefone, '') AS telefone,
+                COALESCE(f.telefone, '') AS celular
+
+            FROM vales v
+
+            LEFT JOIN funcionarios f 
+                ON f.id = v.funcionario_id
+
+            WHERE UPPER(v.status) = 'PENDENTE'
+
+            ORDER BY v.data_solicitacao DESC;
+        `;
+
+        const resultado = await pool.query(query);
+
+        res.json(resultado.rows);
+
+    } catch (erro) {
+        console.error("Erro ao buscar vales pendentes:", erro);
+
+        res.status(500).json({
+            erro: "Erro ao buscar vales pendentes: " + erro.message
+        });
+    }
+});
+
+
+// ======================================================
+// 2. POST /api/vale/responder
+// 3. PUT  /api/vale/responder
+//
+// Aprova ou recusa o vale.
+//
+// Também retorna os dados completos do funcionário,
+// incluindo PIX e telefone.
+// ======================================================
+async function responderValeHandler(req, res) {
+
+    const {
+        id,
+        vale_id,
+        status,
+        resposta,
+        observacao
+    } = req.body;
+
+    const idFinal = id || vale_id;
+
+    if (!idFinal || !status) {
+        return res.status(400).json({
+            erro: "ID do vale e novo status são obrigatórios."
+        });
+    }
 
     try {
-        // Busca o salário do funcionário
-        const funcRes = await pool.query('SELECT salario_base FROM funcionarios WHERE id = $1', [funcionario_id]);
-        if (funcRes.rows.length === 0) return res.status(404).json({ erro: "Funcionário não encontrado." });
-        
-        const salarioBase = parseFloat(funcRes.rows[0].salario_base || 0);
-        const limiteMaximo = salarioBase * 0.40; // 40% do salário
 
-        // Busca o total de vales já solicitados no mês (Pendente ou Aprovado)
-        const valesRes = await pool.query(`
-            SELECT SUM(valor) as total_gasto 
-            FROM vales 
-            WHERE funcionario_id = $1 AND competencia_mes = $2 AND competencia_ano = $3 AND status != 'Recusado'
-        `, [funcionario_id, mes, ano]);
+        // ------------------------------------------
+        // Atualiza o status do vale
+        // ------------------------------------------
+        const query = `
+            UPDATE vales
+            SET 
+                status = $1,
+                data_resposta = NOW()
+            WHERE id = $2
+            RETURNING *;
+        `;
 
-        const totalGasto = parseFloat(valesRes.rows[0].total_gasto || 0);
-        const valorSolicitado = parseFloat(valor);
+        const resultado = await pool.query(query, [
+            status,
+            idFinal
+        ]);
 
-        // Regra 2: Trava dos 40%
-        if ((totalGasto + valorSolicitado) > limiteMaximo) {
-            return res.status(400).json({ 
-                erro: "Limite excedido.", 
-                limite_disponivel: limiteMaximo - totalGasto 
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                erro: "Vale não encontrado para atualização."
             });
         }
 
-        // Insere o vale se passou nas regras
-        const query = `
-            INSERT INTO vales (funcionario_id, valor, data_solicitacao, competencia_mes, competencia_ano, justificativa, status)
-            VALUES ($1, $2, NOW(), $3, $4, $5, 'Pendente') RETURNING *;
-        `;
-        const novoVale = await pool.query(query, [funcionario_id, valorSolicitado, mes, ano, justificativa]);
+        const valeAtualizado = resultado.rows[0];
 
-        res.status(201).json({ mensagem: "Vale solicitado com sucesso!", vale: novoVale.rows[0] });
+        // ------------------------------------------
+        // Busca novamente os dados do funcionário
+        // ligados ao vale
+        // ------------------------------------------
+        const funcionarioResult = await pool.query(
+            `
+            SELECT
+                id,
+                nome,
+                pix,
+                telefone
+            FROM funcionarios
+            WHERE id = $1
+            `,
+            [valeAtualizado.funcionario_id]
+        );
 
-    } catch (erro) {
-        console.error("Erro ao solicitar vale:", erro);
-        res.status(500).json({ erro: "Erro interno no servidor." });
-    }
-});
+        let funcionario = null;
 
-// ==========================================
-// 2. LISTAR VALES DO FUNCIONÁRIO (PWA)
-// ==========================================
-router.get('/meus-vales/:id', async (req, res) => {
-    try {
-        const query = "SELECT * FROM vales WHERE funcionario_id = $1 ORDER BY data_solicitacao DESC";
-        const resultado = await pool.query(query, [req.params.id]);
-        
-        // Retorna também o salário para o PWA calcular o progresso visual
-        const funcRes = await pool.query('SELECT salario_base FROM funcionarios WHERE id = $1', [req.params.id]);
-        const salarioBase = parseFloat(funcRes.rows[0]?.salario_base || 0);
-
-        res.json({ sucesso: true, historico: resultado.rows, salario_base: salarioBase });
-    } catch (erro) {
-        console.error("Erro ao buscar vales:", erro);
-        res.status(500).json({ erro: "Erro ao buscar vales." });
-    }
-});
-
-// ==========================================
-// 3. RESPONDER VALE (RH)
-// ==========================================
-router.post('/responder', async (req, res) => {
-    const { vale_id, status, resposta_rh } = req.body;
-
-    if (!['Aprovado', 'Recusado'].includes(status)) {
-        return res.status(400).json({ erro: "Status inválido." });
-    }
-
-    try {
-        const query = `
-            UPDATE vales 
-            SET status = $1, resposta_rh = $2, data_resposta = NOW()
-            WHERE id = $3 RETURNING *;
-        `;
-        const resultado = await pool.query(query, [status, resposta_rh || null, vale_id]);
-
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({ erro: "Vale não encontrado." });
+        if (funcionarioResult.rows.length > 0) {
+            funcionario = funcionarioResult.rows[0];
         }
 
-        res.json({ mensagem: `Vale ${status.toLowerCase()} com sucesso!`, vale: resultado.rows[0] });
+        // ------------------------------------------
+        // Dados que serão enviados para o painel
+        // ------------------------------------------
+
+        const pix = funcionario?.pix || '';
+        const telefone = funcionario?.telefone || '';
+
+        res.json({
+            sucesso: true,
+
+            mensagem: `Vale ${status} com sucesso!`,
+
+            vale: {
+                ...valeAtualizado,
+
+                // Dados do funcionário
+                colaborador: funcionario?.nome || 'Colaborador Sem Nome',
+                nome: funcionario?.nome || 'Colaborador Sem Nome',
+                funcionario_nome: funcionario?.nome || 'Colaborador Sem Nome',
+
+                // PIX
+                pix: pix,
+                chave_pix: pix,
+
+                // Telefone
+                telefone: telefone,
+                celular: telefone
+            },
+
+            // Também deixamos os dados diretamente na resposta
+            // para facilitar o uso pelo painel administrativo
+            funcionario: funcionario
+                ? {
+                    id: funcionario.id,
+                    nome: funcionario.nome,
+                    pix: pix,
+                    chave_pix: pix,
+                    telefone: telefone,
+                    celular: telefone
+                }
+                : null
+        });
+
     } catch (erro) {
+
         console.error("Erro ao responder vale:", erro);
-        res.status(500).json({ erro: "Erro ao processar resposta." });
+
+        res.status(500).json({
+            erro: "Erro ao responder vale: " + erro.message
+        });
+    }
+}
+
+router.post('/responder', responderValeHandler);
+router.put('/responder', responderValeHandler);
+
+
+// ======================================================
+// 3. GET /api/vale/meus-vales/:funcionario_id
+// ======================================================
+router.get('/meus-vales/:funcionario_id', async (req, res) => {
+
+    const { funcionario_id } = req.params;
+
+    if (!funcionario_id) {
+        return res.status(400).json({
+            erro: "ID do funcionário é obrigatório."
+        });
+    }
+
+    try {
+
+        // ------------------------------------------
+        // Busca funcionário
+        // ------------------------------------------
+        const funcRes = await pool.query(
+            `
+            SELECT
+                id,
+                nome,
+                salario_base,
+                pix,
+                telefone
+            FROM funcionarios
+            WHERE id = $1
+            `,
+            [funcionario_id]
+        );
+
+        if (funcRes.rows.length === 0) {
+            return res.status(404).json({
+                erro: "Funcionário não encontrado."
+            });
+        }
+
+        const funcionario = funcRes.rows[0];
+
+        const salarioBase = parseFloat(
+            funcionario.salario_base || 0
+        );
+
+        // ------------------------------------------
+        // Busca histórico de vales
+        // ------------------------------------------
+        const valesRes = await pool.query(
+            `
+            SELECT *
+            FROM vales
+            WHERE funcionario_id = $1
+            ORDER BY data_solicitacao DESC
+            `,
+            [funcionario_id]
+        );
+
+        res.json({
+
+            sucesso: true,
+
+            funcionario: {
+                id: funcionario.id,
+                nome: funcionario.nome,
+                pix: funcionario.pix || '',
+                chave_pix: funcionario.pix || '',
+                telefone: funcionario.telefone || '',
+                celular: funcionario.telefone || ''
+            },
+
+            salario_base: salarioBase,
+
+            percentual_limite: 40,
+
+            limite_maximo: salarioBase * 0.40,
+
+            historico: valesRes.rows,
+
+            vales: valesRes.rows
+        });
+
+    } catch (erro) {
+
+        console.error("Erro ao buscar meus vales:", erro);
+
+        res.status(500).json({
+            erro: "Erro no servidor: " + erro.message
+        });
     }
 });
 
-// ==========================================
-// 4. LISTAR VALES PENDENTES (PAINEL RH)
-// ==========================================
-router.get('/pendentes', async (req, res) => {
+
+// ======================================================
+// 4. GET /api/vale/total/:funcionario_id
+// ======================================================
+router.get('/total/:funcionario_id', async (req, res) => {
+
+    const { funcionario_id } = req.params;
+
     try {
-        // AJUSTADO: Usando exatamente os nomes das colunas 'pix' e 'telefone' da sua tabela.
+
         const query = `
             SELECT 
-                v.*, 
-                f.nome as funcionario_nome,
-                f.pix,
-                f.telefone
-            FROM vales v
-            JOIN funcionarios f ON f.id = v.funcionario_id
-            WHERE v.status = 'Pendente'
-            ORDER BY v.data_solicitacao ASC;
+                COALESCE(SUM(valor), 0) AS total
+            FROM vales
+            WHERE funcionario_id = $1
+
+              AND UPPER(status) != 'RECUSADO'
+
+              AND EXTRACT(
+                    MONTH FROM 
+                    data_solicitacao AT TIME ZONE 'America/Sao_Paulo'
+                  )
+                  =
+                  EXTRACT(
+                    MONTH FROM 
+                    CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo'
+                  )
+
+              AND EXTRACT(
+                    YEAR FROM 
+                    data_solicitacao AT TIME ZONE 'America/Sao_Paulo'
+                  )
+                  =
+                  EXTRACT(
+                    YEAR FROM 
+                    CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo'
+                  );
         `;
-        const resultado = await pool.query(query);
-        res.json(resultado.rows);
+
+        const resultado = await pool.query(
+            query,
+            [funcionario_id]
+        );
+
+        res.json({
+            sucesso: true,
+            total: parseFloat(resultado.rows[0].total)
+        });
+
     } catch (erro) {
-        console.error("Erro ao buscar vales pendentes:", erro);
-        res.status(500).json({ erro: "Erro ao buscar vales." });
+
+        console.error(
+            "Erro ao calcular total de vales:",
+            erro
+        );
+
+        res.status(500).json({
+            erro: "Erro ao calcular total de vales."
+        });
     }
 });
+
+
+// ======================================================
+// 5. POST /api/vale/solicitar
+// ======================================================
+router.post('/solicitar', async (req, res) => {
+
+    const {
+        funcionario_id,
+        valor,
+        observacao,
+        justificativa
+    } = req.body;
+
+    const motivoFinal =
+        observacao || justificativa || '';
+
+    if (
+        !funcionario_id ||
+        !valor ||
+        parseFloat(valor) <= 0
+    ) {
+        return res.status(400).json({
+            erro: "Informe o funcionário e um valor válido."
+        });
+    }
+
+    try {
+
+        const agora = new Date();
+
+        const mesAtual =
+            agora.getMonth() + 1;
+
+        const anoAtual =
+            agora.getFullYear();
+
+        const queryInsert = `
+            INSERT INTO vales (
+                funcionario_id,
+                valor,
+                justificativa,
+                status,
+                data_solicitacao,
+                competencia_mes,
+                competencia_ano
+            )
+            VALUES (
+                $1,
+                $2,
+                $3,
+                'Pendente',
+                NOW(),
+                $4,
+                $5
+            )
+            RETURNING *;
+        `;
+
+        const insercao = await pool.query(
+            queryInsert,
+            [
+                funcionario_id,
+                parseFloat(valor),
+                vazio(motivoFinal),
+                mesAtual,
+                anoAtual
+            ]
+        );
+
+        res.status(201).json({
+
+            sucesso: true,
+
+            mensagem:
+                "Vale solicitado com sucesso!",
+
+            registro:
+                insercao.rows[0]
+        });
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao solicitar vale:",
+            erro
+        );
+
+        res.status(500).json({
+            erro:
+                "Erro ao salvar vale: " +
+                erro.message
+        });
+    }
+});
+
 
 module.exports = router;

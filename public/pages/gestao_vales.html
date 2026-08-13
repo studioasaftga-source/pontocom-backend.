@@ -27,8 +27,7 @@
         const URL_API = '/api'; 
         let WPP_DONO = ""; 
 
-        // Força a chamada do aplicativo nativo (Desktop ou Mobile)
-        // No PC, o navegador perguntará uma vez se pode abrir o WhatsApp. Marque "Sempre permitir".
+        // Link padrão para abertura do WhatsApp
         const urlBaseWhatsapp = 'whatsapp://send';
 
         // 1. Busca o WhatsApp do Financeiro salvo em Configurações
@@ -37,8 +36,9 @@
                 const res = await fetch(`${URL_API}/configuracoes`); 
                 const dados = await res.json();
                 
-                if (dados && dados.whatsapp_financeiro) {
-                    const apenasNumeros = dados.whatsapp_financeiro.replace(/\D/g, '');
+                if (dados && (dados.whatsapp_financeiro || dados.telefone_financeiro)) {
+                    const numBruto = dados.whatsapp_financeiro || dados.telefone_financeiro;
+                    const apenasNumeros = String(numBruto).replace(/\D/g, '');
                     if (apenasNumeros.startsWith('55') && apenasNumeros.length >= 12) {
                         WPP_DONO = apenasNumeros;
                     } else {
@@ -75,20 +75,20 @@
                 }
 
                 data.forEach(vale => {
-                    // Puxando o nome correto do backend (funcionario_nome)
                     const nomeDoFuncionario = vale.funcionario_nome || vale.nome || 'Nome não encontrado';
-                    
                     const dataFormatada = new Date(vale.data_solicitacao).toLocaleDateString('pt-BR');
                     const valorFormat = Number(vale.valor).toFixed(2).replace('.', ',');
-                    const pix = vale.pix || vale.chave_pix || 'Não cadastrada';
-                    const telefone = vale.telefone || '';
+                    
+                    // Ajuste de leitura da Chave PIX e Telefone vindos do Supabase
+                    const pix = vale.chave_pix || vale.pix || 'Não cadastrada';
+                    const telefone = vale.funcionario_telefone || vale.telefone || '';
 
                     tbody.innerHTML += `
                         <tr id="linha-vale-${vale.id}">
                             <td><strong>${nomeDoFuncionario}</strong></td>
                             <td>${dataFormatada}</td>
                             <td style="color: #10b981; font-weight: bold;">R$ ${valorFormat}</td>
-                            <td>${vale.justificativa || '--'}</td>
+                            <td>${vale.resposta_rh || vale.justificativa || '--'}</td>
                             <td>${pix}</td>
                             <td id="acoes-vale-${vale.id}">
                                 <div style="display: flex; gap: 5px; flex-direction: column;">
@@ -104,12 +104,11 @@
             }
         }
 
-        // 3. Ação de Aprovação com Emojis blindados e Link Direto
+        // 3. Ação de Aprovação com a exibição dos dois botões de WhatsApp
         window.aprovarValeRH = async function(id, nome, valor, pix, telColab) {
             if(!confirm(`Aprovar o vale de R$ ${valor} para ${nome}?`)) return;
 
             try {
-                // Atualizado para a nova rota unificada /responder
                 const res = await fetch(`${URL_API}/vale/responder`, { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -141,25 +140,31 @@
                     const paramsDono = new URLSearchParams({ phone: WPP_DONO, text: textoDono }).toString();
                     const linkDono = WPP_DONO ? `${urlBaseWhatsapp}?${paramsDono}` : '#';
 
+                    // Formatação do telefone do colaborador
                     let linkColab = '#';
-                    if (telColab) {
-                        const telFormatado = '55' + telColab.replace(/\D/g, '');
+                    const apenasNumColab = telColab ? String(telColab).replace(/\D/g, '') : '';
+                    if (apenasNumColab) {
+                        const telFormatado = apenasNumColab.startsWith('55') ? apenasNumColab : '55' + apenasNumColab;
                         const paramsColab = new URLSearchParams({ phone: telFormatado, text: textoColab }).toString();
                         linkColab = `${urlBaseWhatsapp}?${paramsColab}`;
                     }
 
                     const celula = document.getElementById(`acoes-vale-${id}`);
                     celula.innerHTML = `
-                        <span style="color: #10b981; font-size: 12px; font-weight: bold;">APROVADO</span>
+                        <span style="color: #10b981; font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px;">APROVADO</span>
+                        
                         ${WPP_DONO 
-                            ? `<a href="${linkDono}" target="_blank" style="background-color: #25D366; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px;">📲 Notificar Financeiro</a>` 
-                            : `<span style="font-size: 10px; color: orange; display: block; margin-top: 4px;">Cadastre o tel. em Configurações</span>`}
-                        ${telColab ? `<a href="${linkColab}" target="_blank" style="background-color: #38bdf8; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px;">📲 Notificar Colab</a>` : ''}
+                            ? `<a href="${linkDono}" target="_blank" style="background-color: #25D366; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 2px; font-size: 12px; font-weight: bold;">📲 Notificar Financeiro</a>` 
+                            : `<span style="font-size: 10px; color: orange; display: block; margin-top: 2px;">Cadastre o tel. em Configurações</span>`}
+                        
+                        ${apenasNumColab 
+                            ? `<a href="${linkColab}" target="_blank" style="background-color: #38bdf8; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px; font-weight: bold;">📱 Notificar Colab</a>` 
+                            : `<span style="font-size: 10px; color: #f43f5e; display: block; margin-top: 2px;">Sem tel. cadastrado</span>`}
                     `;
                 } else {
                     alert("Erro ao aprovar: " + (data.erro || "Desconhecido"));
                 }
-            } catch(e) { alert("Erro de conexão."); }
+            } catch(e) { alert("Erro de conexão ao aprovar vale."); }
         };
 
         // 4. Ação de Recusa com Motivo Obrigatório
@@ -172,7 +177,6 @@
             }
 
             try {
-                // Atualizado para a nova rota unificada /responder passando a justificativa do RH
                 const res = await fetch(`${URL_API}/vale/responder`, { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

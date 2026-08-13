@@ -1,3 +1,16 @@
+// =====================================
+// PONTOCOM RH - FUNCIONÁRIOS
+// =====================================
+
+let listaCargosCache = []; // Guarda os cargos em memória para consultar a carga horária
+
+// Função principal de inicialização
+async function inicializarTelaFuncionarios() {
+    await carregarCargosSelect();
+    await carregarFuncionarios();
+    configurarEventosCargo();
+}
+
 // 1. CARREGAR CARGOS NO SELECT
 async function carregarCargosSelect() {
     const selectCargo = document.getElementById("cargo_id");
@@ -9,15 +22,42 @@ async function carregarCargosSelect() {
         if (!resposta.ok) throw new Error("Erro ao buscar cargos");
 
         const cargos = await resposta.json();
+        listaCargosCache = Array.isArray(cargos) ? cargos : [];
+        
         selectCargo.innerHTML = '<option value="">Selecione o cargo</option>';
 
-        cargos.forEach(c => {
-            selectCargo.innerHTML += `<option value="${c.id}">${c.nome || c.cargo_nome || c.cargo}</option>`;
+        listaCargosCache.forEach(c => {
+            const nomeCargo = c.nome || c.nome_interno || c.cargo_nome || c.cargo || 'Cargo sem nome';
+            selectCargo.innerHTML += `<option value="${c.id}">${nomeCargo}</option>`;
         });
     } catch (erro) {
         console.error("Erro ao carregar cargos:", erro);
-        selectCargo.innerHTML = '<option value="">Erro ao carregar</option>';
+        selectCargo.innerHTML = '<option value="">Erro ao carregar cargos</option>';
     }
+}
+
+// Atualiza a carga horária automaticamente ao selecionar o cargo no dropdown
+function configurarEventosCargo() {
+    const selectCargo = document.getElementById("cargo_id");
+    if (!selectCargo) return;
+
+    // Remove ouvintes antigos criando um novo clone para evitar duplicidade no SPA
+    const novoSelect = selectCargo.cloneNode(true);
+    selectCargo.parentNode.replaceChild(novoSelect, selectCargo);
+
+    novoSelect.addEventListener("change", (e) => {
+        const cargoIdSelecionado = parseInt(e.target.value, 10);
+        const cargoEncontrado = listaCargosCache.find(c => c.id === cargoIdSelecionado);
+
+        const inputCarga = document.getElementById("carga_horaria_mensal");
+        if (inputCarga) {
+            if (cargoEncontrado && cargoEncontrado.carga_horaria) {
+                inputCarga.value = cargoEncontrado.carga_horaria;
+            } else {
+                inputCarga.value = 220; // Padrão
+            }
+        }
+    });
 }
 
 // 2. CARREGAR LISTA DE FUNCIONÁRIOS
@@ -47,7 +87,7 @@ async function carregarFuncionarios() {
                     <td><strong>${f.nome || '--'}</strong></td>
                     <td>${f.cpf || '--'}</td>
                     <td>${f.pis_pasep || f.pis || '--'}</td>
-                    <td>${f.cargo_nome || 'Não definido'}</td>
+                    <td>${f.cargo_nome || 'Sem Cargo'}</td>
                     <td>${salarioFormatado}</td>
                     <td>
                         <span class="status ${f.ativo === false ? 'status-inativo' : 'status-ativo'}">
@@ -55,20 +95,19 @@ async function carregarFuncionarios() {
                         </span>
                     </td>
                     <td>
-                        <button onclick='preencherEdicao(${JSON.stringify(f).replace(/'/g, "&#39;")})' style="cursor:pointer;">✏️ Editar</button>
+                        <button onclick='preencherEdicao(${JSON.stringify(f).replace(/'/g, "&#39;")})' style="cursor:pointer; background:none; border:none; color:#38bdf8; font-weight:bold;">✏️ Editar</button>
                     </td>
                 </tr>
             `;
         });
     } catch (erro) {
         console.error("Erro ao carregar lista:", erro);
-        tabela.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Erro de conexão com o banco.</td></tr>`;
+        tabela.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #f43f5e;">Erro de conexão com o banco.</td></tr>`;
     }
 }
 
-// 3. SALVAR / ATUALIZAR FUNCIONÁRIO (COM TRAVA DE SEGURANÇA)
+// 3. SALVAR / ATUALIZAR FUNCIONÁRIO
 async function salvarFuncionario() {
-    // Agora TUDO está protegido. Se algo der errado, um alerta vai saltar na tela.
     try {
         const id = document.getElementById("funcionario_id").value;
         const nome = document.getElementById("nome").value.trim();
@@ -81,7 +120,7 @@ async function salvarFuncionario() {
 
         let rawSalario = document.getElementById("salario_base").value || "0";
         let cargoIdRaw = document.getElementById("cargo_id").value;
-        const cargoFinaID = parseInt(cargoIdRaw) || null;
+        const cargoFinaID = parseInt(cargoIdRaw, 10) || null;
 
         const dados = {
             nome: nome,
@@ -116,7 +155,6 @@ async function salvarFuncionario() {
             body: JSON.stringify(dados)
         });
 
-        // Rota de segurança caso o servidor use outro caminho
         if (resposta.status === 404) {
             url = id ? `/api/rh/funcionarios/${id}` : "/api/rh/funcionarios";
             resposta = await fetch(url, {
@@ -136,21 +174,25 @@ async function salvarFuncionario() {
         carregarFuncionarios();
         
     } catch (erro) {
-        // Se a tela falhar ou o Node recusar, vai apitar aqui:
         console.error("Erro no código:", erro);
         alert("Atenção, ocorreu um erro: " + erro.message);
     }
 }
 
-// 4. PREENCHER EDIÇÃO (ATUALIZADO)
+// 4. PREENCHER EDIÇÃO NA TELA
 function preencherEdicao(f) {
     document.getElementById("funcionario_id").value = f.id || "";
     document.getElementById("nome").value = f.nome || "";
     document.getElementById("cpf").value = f.cpf || "";
     document.getElementById("rg").value = f.rg || "";
     document.getElementById("pis").value = f.pis_pasep || f.pis || "";
-    document.getElementById("cargo_id").value = f.cargo_id || "";
     
+    const selectCargo = document.getElementById("cargo_id");
+    if (selectCargo) {
+        selectCargo.value = f.cargo_id || "";
+        selectCargo.dispatchEvent(new Event('change'));
+    }
+
     let salarioParaTela = f.salario_base || f.salario || "";
     if (salarioParaTela) {
         salarioParaTela = parseFloat(salarioParaTela).toFixed(2).replace('.', ',');
@@ -163,13 +205,16 @@ function preencherEdicao(f) {
     document.getElementById("telefone").value = f.telefone || "";
     document.getElementById("email").value = f.email || "";
     
-    // Novos campos do eSocial
     document.getElementById("data_nascimento").value = f.data_nascimento ? f.data_nascimento.split('T')[0] : "";
     document.getElementById("ctps").value = f.ctps || "";
     document.getElementById("dependentes").value = f.dependentes || 0;
     document.getElementById("tipo_contrato").value = f.tipo_contrato || "CLT";
     document.getElementById("data_admissao").value = f.data_admissao ? f.data_admissao.split('T')[0] : "";
-    document.getElementById("carga_horaria_mensal").value = f.carga_horaria_mensal || 220;
+    
+    if (f.carga_horaria_mensal) {
+        document.getElementById("carga_horaria_mensal").value = f.carga_horaria_mensal;
+    }
+    
     document.getElementById("optante_vt").value = f.optante_vt || "SIM";
     document.getElementById("adicional_tipo").value = f.adicional_tipo || "NENHUM";
 
@@ -200,3 +245,14 @@ function filtrarFuncionarios() {
         linha.style.display = texto.includes(termo) ? "" : "none";
     });
 }
+
+// =====================================
+// AUTO-INICIALIZADOR INTELIGENTE (SPA FIX)
+// =====================================
+(function checarEMontar() {
+    if (document.getElementById("listaFuncionarios")) {
+        inicializarTelaFuncionarios();
+    } else {
+        setTimeout(checarEMontar, 200); // Tenta a cada 200ms até encontrar os elementos na tela
+    }
+})();

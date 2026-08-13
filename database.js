@@ -1,12 +1,13 @@
-require('dotenv').config();
+require('dotenv').config(); // Mantido caso o seu back-end use o .env para outras coisas (como a porta)
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT),
+  // URL de conexão colocada diretamente aqui:
+  connectionString: "postgresql://postgres:Pqixw0i3jIvCBKUK@db.kntjzksaokqoavwjkqnm.supabase.co:5432/postgres",
+  // ⚠️ SSL obrigatório mantido
+  ssl: {
+    rejectUnauthorized: false
+  },
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000
@@ -15,7 +16,7 @@ const pool = new Pool({
 // ✅ Teste de conexão
 pool.connect()
   .then(client => {
-    console.log("✅ Conectado ao PostgreSQL");
+    console.log("✅ Conectado ao PostgreSQL (Supabase) com sucesso!");
     client.release();
   })
   .catch(err => {
@@ -52,7 +53,5 @@ const initDB = async () => {
     console.error(err);
   }
 };
-
-
 
 module.exports = pool;

@@ -35,54 +35,18 @@
 
         <!-- MENU FIXO -->
         <div class="menu">
-            <a href="#" class="ativo" onclick="abrirDashboard(this)">
-                🏠 Dashboard
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/funcionarios.html', this)">
-                👥 Funcionários
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/controle_ponto.html', this)">
-                🛡️ Controle de Ponto (RH)
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/cargos.html', this)">
-                💼 Cargos
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/empresa.html', this)">
-                🏢 Empresa
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/pontos.html', this)">
-                🕒 Espelho de Ponto
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/rh.html', this)">
-                📅 Fechamento de Ponto
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/folha.html', this)">
-                💰 Folha de Pagamento
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/holerites.html', this)">
-                📄 Holerites
-            </a>
-
-            <!-- NOVO MENU: GESTÃO DE VALES -->
-            <a href="#" onclick="carregarPagina('pages/gestao_vales.html', this)">
-                💸 Gestão de Vales
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/relatorios.html', this)">
-                📊 Relatórios
-            </a>
-
-            <a href="#" onclick="carregarPagina('pages/configuracoes.html', this)">
-                ⚙ Configurações
-            </a>
+            <a href="#" class="ativo" onclick="abrirDashboard(this)">🏠 Dashboard</a>
+            <a href="#" onclick="carregarPagina('pages/funcionarios.html', this)">👥 Funcionários</a>
+            <a href="#" onclick="carregarPagina('pages/controle_ponto.html', this)">🛡️ Controle de Ponto (RH)</a>
+            <a href="#" onclick="carregarPagina('pages/cargos.html', this)">💼 Cargos</a>
+            <a href="#" onclick="carregarPagina('pages/empresa.html', this)">🏢 Empresa</a>
+            <a href="#" onclick="carregarPagina('pages/pontos.html', this)">🕒 Espelho de Ponto</a>
+            <a href="#" onclick="carregarPagina('pages/rh.html', this)">📅 Fechamento de Ponto</a>
+            <a href="#" onclick="carregarPagina('pages/folha.html', this)">💰 Folha de Pagamento</a>
+            <a href="#" onclick="carregarPagina('pages/holerites.html', this)">📄 Holerites</a>
+            <a href="#" onclick="carregarPagina('pages/gestao_vales.html', this)">💸 Gestão de Vales</a>
+            <a href="#" onclick="carregarPagina('pages/relatorios.html', this)">📊 Relatórios</a>
+            <a href="#" onclick="carregarPagina('pages/configuracoes.html', this)">⚙ Configurações</a>
         </div>
 
         <!-- CONTEÚDO PRINCIPAL -->
@@ -159,19 +123,18 @@
     <!-- SCRIPTS GLOBAIS DO SISTEMA                 -->
     <!-- ========================================== -->
     
-    <!-- 1. Importa as funções dos módulos -->
     <script src="js/funcionarios.js"></script>
     <script src="js/cargos.js"></script>
     <script src="js/pontos.js"></script>
     <script src="js/controle_ponto.js"></script>
     <script src="js/rh.js"></script>
+    <script src="js/empresa.js"></script>
 
     <!-- 2. Motor de navegação (SPA) e Dashboard -->
     <script>
         let intervalDashboard = null;
         const htmlDashboardOriginal = document.querySelector('.conteudo').innerHTML;
 
-        // FUNÇÃO DE NAVEGAÇÃO ENTRE TELAS
         async function carregarPagina(url, elementoLink) {
             if (intervalDashboard) {
                 clearInterval(intervalDashboard);
@@ -197,9 +160,7 @@
                     containerConteudo.innerHTML = html;
                 }
 
-                // ========================================================
-                // GARANTIR EXECUÇÃO DE SCRIPTS INJETADOS (Para Gestão de Vales)
-                // ========================================================
+                // Executar scripts injetados
                 const scripts = containerConteudo.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
@@ -209,17 +170,12 @@
                 });
 
                 // ===== INICIA AS FUNÇÕES DA TELA CARREGADA =====
-                if (url.includes('funcionarios.html')) {
-                    if (typeof carregarCargosSelect === 'function') carregarCargosSelect();
-                    if (typeof carregarFuncionarios === 'function') carregarFuncionarios();
+                if (url.includes('cargos.html')) {
+                    if (typeof inicializarTelaCargos === 'function') inicializarTelaCargos();
                 }
                 if (url.includes('controle_ponto.html')) {
                     if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
                     if (typeof carregarFuncionariosSelect === 'function') carregarFuncionariosSelect();
-                }
-                if (url.includes('cargos.html')) {
-                    if (typeof carregarListaCargos === 'function') carregarListaCargos();
-                    if (typeof carregarListaCBOs === 'function') carregarListaCBOs();
                 }
                 if (url.includes('pontos.html')) {
                     if (typeof inicializarTelaPonto === 'function') inicializarTelaPonto();
@@ -231,9 +187,11 @@
                     if(selectMes) selectMes.value = hoje.getMonth() + 1;
                     if(selectAno) selectAno.value = hoje.getFullYear();
                 }
-                // Adicionado chamada para Gestão de Vales, caso a função fique no escopo global
                 if (url.includes('gestao_vales.html')) {
                     if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
+                }
+                if (url.includes('empresa.html')) {
+                    if (typeof inicializarTelaEmpresa === 'function') inicializarTelaEmpresa();
                 }
 
             } catch (erro) {
@@ -247,7 +205,6 @@
             }
         }
 
-        // VOLTAR PARA O DASHBOARD
         function abrirDashboard(elementoLink) {
             atualizarMenuAtivo(elementoLink);
             document.querySelector('.conteudo').innerHTML = htmlDashboardOriginal;
@@ -257,7 +214,6 @@
             }
         }
 
-        // DESTAQUE NO MENU
         function atualizarMenuAtivo(elementoLink) {
             if (!elementoLink) return;
             const links = document.querySelectorAll('.menu a');
@@ -265,7 +221,6 @@
             elementoLink.classList.add('ativo');
         }
 
-        // DADOS DO DASHBOARD VIA API
         async function carregarDashboard(){
             try {
                 const resposta = await fetch("/api/rh/dashboard");
@@ -323,7 +278,6 @@
             }
         }
 
-        // Inicia o Dashboard ao abrir o sistema
         carregarDashboard();
         intervalDashboard = setInterval(carregarDashboard, 10000);
     </script>

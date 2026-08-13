@@ -1,183 +1,185 @@
-<!-- Estilos da Tela de Cargos -->
-<style>
-    .cargo-form-container, .cargo-table-container {
-        background-color: #151c2c;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 24px;
-        max-width: 800px;
-        margin: 0 auto 24px auto;
-        color: #f8fafc;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-    }
+<div class="conteudo">
 
-    .cargo-form-section {
-        font-size: 13px;
-        font-weight: 700;
-        color: #38bdf8;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 12px;
-        margin-top: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 6px;
-    }
+    <!-- Estilos da Tela de Cargos -->
+    <style>
+        .cargo-form-container, .cargo-table-container {
+            background-color: #151c2c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 800px;
+            margin: 0 auto 24px auto;
+            color: #f8fafc;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
 
-    .cargo-form-section:first-child { margin-top: 0; }
+        .cargo-form-section {
+            font-size: 13px;
+            font-weight: 700;
+            color: #38bdf8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            margin-top: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 6px;
+        }
 
-    .cargo-grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
+        .cargo-form-section:first-child { margin-top: 0; }
 
-    @media (max-width: 600px) {
-        .cargo-grid-2 { grid-template-columns: 1fr; }
-    }
+        .cargo-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
 
-    .input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
+        @media (max-width: 600px) {
+            .cargo-grid-2 { grid-template-columns: 1fr; }
+        }
 
-    .input-group label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #94a3b8;
-    }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-    .input-group input {
-        background-color: #0b0f19;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 12px;
-        color: #f8fafc;
-        font-size: 14px;
-        outline: none;
-    }
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
 
-    .input-group input:focus {
-        border-color: #38bdf8;
-    }
+        .input-group input {
+            background-color: #0b0f19;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            color: #f8fafc;
+            font-size: 14px;
+            outline: none;
+        }
 
-    .btn-salvar-cargo {
-        width: 100%;
-        padding: 14px;
-        background-color: #38bdf8;
-        color: #0b0f19;
-        border: none;
-        border-radius: 12px;
-        font-size: 15px;
-        font-weight: 700;
-        cursor: pointer;
-        margin-top: 10px;
-    }
+        .input-group input:focus {
+            border-color: #38bdf8;
+        }
 
-    /* Tabela de Cargos Cadastrados */
-    .tabela-cargos {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-        font-size: 14px;
-    }
+        .btn-salvar-cargo {
+            width: 100%;
+            padding: 14px;
+            background-color: #38bdf8;
+            color: #0b0f19;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+        }
 
-    .tabela-cargos th, .tabela-cargos td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
+        /* Tabela de Cargos Cadastrados */
+        .tabela-cargos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 14px;
+        }
 
-    .tabela-cargos th {
-        color: #94a3b8;
-        font-size: 12px;
-        text-transform: uppercase;
-    }
+        .tabela-cargos th, .tabela-cargos td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
 
-    .btn-acao {
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 13px;
-    }
+        .tabela-cargos th {
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
 
-    .btn-editar { color: #38bdf8; margin-right: 12px; }
-    .btn-excluir { color: #f43f5e; }
-</style>
+        .btn-acao {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
 
-<!-- FORMULÁRIO DE CADASTRO/EDIÇÃO -->
-<div class="cargo-form-container">
-    <form id="formCargo" onsubmit="salvarCargo(event)">
-        
-        <div class="cargo-form-section">Informações Básicas</div>
-        <div class="cargo-grid-2">
-            <div class="input-group">
-                <label for="nomeCargo">Cargo Interno da Empresa</label>
-                <input type="text" id="nomeCargo" required placeholder="Ex: Auxiliar Mecânico">
-            </div>
+        .btn-editar { color: #38bdf8; margin-right: 12px; }
+        .btn-excluir { color: #f43f5e; }
+    </style>
+
+    <!-- FORMULÁRIO DE CADASTRO/EDIÇÃO -->
+    <div class="cargo-form-container">
+        <form id="formCargo" onsubmit="salvarCargo(event)">
             
-            <div class="input-group">
-                <label for="cboCargo">CBO Oficial (Código ou Nome)</label>
-                <input type="text" id="cboCargo" list="listaCBO" placeholder="Digite para buscar..." required>
-                <!-- Datalist alimentado dinamicamente via JS -->
-                <datalist id="listaCBO"></datalist>
+            <div class="cargo-form-section">Informações Básicas</div>
+            <div class="cargo-grid-2">
+                <div class="input-group">
+                    <label for="nomeCargo">Cargo Interno da Empresa</label>
+                    <input type="text" id="nomeCargo" required placeholder="Ex: Auxiliar Mecânico">
+                </div>
+                
+                <div class="input-group">
+                    <label for="cboCargo">CBO (Opcional)</label>
+                    <input type="text" id="cboCargo" placeholder="Ex: 4142-15 ou deixe em branco">
+                </div>
             </div>
-        </div>
 
-        <div class="cargo-form-section">Jornada de Trabalho Padrão</div>
-        <div class="cargo-grid-2">
-            <div class="input-group">
-                <label for="horaEntrada">Entrada</label>
-                <input type="time" id="horaEntrada" required>
+            <div class="cargo-form-section">Jornada de Trabalho Padrão</div>
+            <div class="cargo-grid-2">
+                <div class="input-group">
+                    <label for="horaEntrada">Entrada</label>
+                    <input type="time" id="horaEntrada" required>
+                </div>
+                <div class="input-group">
+                    <label for="horaSaidaAlmoco">Saída Almoço</label>
+                    <input type="time" id="horaSaidaAlmoco" required>
+                </div>
             </div>
-            <div class="input-group">
-                <label for="horaSaidaAlmoco">Saída Almoço</label>
-                <input type="time" id="horaSaidaAlmoco" required>
+
+            <div class="cargo-grid-2">
+                <div class="input-group">
+                    <label for="horaRetornoAlmoco">Retorno Almoço</label>
+                    <input type="time" id="horaRetornoAlmoco" required>
+                </div>
+                <div class="input-group">
+                    <label for="horaSaida">Saída</label>
+                    <input type="time" id="horaSaida" required>
+                </div>
             </div>
-        </div>
 
-        <div class="cargo-grid-2">
-            <div class="input-group">
-                <label for="horaRetornoAlmoco">Retorno Almoço</label>
-                <input type="time" id="horaRetornoAlmoco" required>
+            <div class="cargo-form-section">Carga Horária</div>
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label for="cargaHoraria">Carga Horária Mensal (Horas)</label>
+                <input type="number" id="cargaHoraria" required placeholder="Ex: 220" min="1" max="300">
             </div>
-            <div class="input-group">
-                <label for="horaSaida">Saída</label>
-                <input type="time" id="horaSaida" required>
-            </div>
-        </div>
 
-        <div class="cargo-form-section">Carga Horária</div>
-        <div class="input-group" style="margin-bottom: 16px;">
-            <label for="cargaHoraria">Carga Horária Mensal (Horas)</label>
-            <input type="number" id="cargaHoraria" required placeholder="Ex: 220" min="1" max="300">
-        </div>
-
-        <button type="submit" class="btn-salvar-cargo" id="btnSalvar">
-            💾 Salvar Cargo
-        </button>
-    </form>
-</div>
-
-<!-- LISTAGEM DE CARGOS -->
-<div class="cargo-table-container">
-    <div class="cargo-form-section">Cargos Cadastrados</div>
-    <div style="overflow-x: auto;">
-        <table class="tabela-cargos">
-            <thead>
-                <tr>
-                    <th>Cargo Interno</th>
-                    <th>CBO</th>
-                    <th>Carga Horária</th>
-                    <th>Horário</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaCargosBody">
-                <tr><td colspan="5" style="text-align: center; color: #94a3b8;">Carregando cargos...</td></tr>
-            </tbody>
-        </table>
+            <button type="submit" class="btn-salvar-cargo" id="btnSalvar">
+                💾 Salvar Cargo
+            </button>
+        </form>
     </div>
+
+    <!-- LISTAGEM DE CARGOS -->
+    <div class="cargo-table-container">
+        <div class="cargo-form-section">Cargos Cadastrados</div>
+        <div style="overflow-x: auto;">
+            <table class="tabela-cargos">
+                <thead>
+                    <tr>
+                        <th>Cargo Interno</th>
+                        <th>CBO</th>
+                        <th>Carga Horária</th>
+                        <th>Horário</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaCargosBody">
+                    <tr><td colspan="5" style="text-align: center; color: #94a3b8;">Carregando cargos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>

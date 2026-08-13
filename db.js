@@ -1,18 +1,20 @@
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const pool = new Pool({
-    user: 'postgres',         // Seu usuário do PostgreSQL
-    host: 'localhost',
-    database: 'pontocom',  // Nome do seu banco de dados
-    password: '240113',    // Sua senha do PostgreSQL
-    port: 5432,
+    // Isso faz o código ler a linha DATABASE_URL do seu arquivo .env
+    connectionString: process.env.DATABASE_URL,
+    // ⚠️ Obrigatório para conectar em banco de dados na nuvem
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 pool.connect((err, client, release) => {
     if (err) {
         return console.error('Erro ao conectar ao PostgreSQL:', err.stack);
     }
-    console.log('✅ Conectado ao PostgreSQL com sucesso!');
+    console.log('✅ Conectado ao PostgreSQL (Supabase) com sucesso!');
     release();
 });
 

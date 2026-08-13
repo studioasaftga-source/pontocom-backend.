@@ -1,60 +1,55 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db'); // Ajuste o caminho para o seu arquivo de conexão, se necessário
+// Ajuste para ../db ou ../database dependendo de como está o nome do arquivo de conexão
+const pool = require('../database'); 
 
-// Função auxiliar para "traduzir" o código do CBO para o ID numérico
-async function obterIdCbo(valorCbo, pool) {
-    // Se o valor já for um número e não contiver traço (ex: já é o ID), retorna ele mesmo
-    if (!isNaN(valorCbo) && !String(valorCbo).includes('-')) {
-        return parseInt(valorCbo, 10);
-    }
-    
-    // Se for um texto como "4142-15", busca o ID interno desse código no banco
-    const result = await pool.query('SELECT id FROM cbo WHERE codigo = $1 LIMIT 1', [valorCbo]);
-    
-    if (result.rows.length > 0) {
-        return result.rows[0].id; // Retorna o ID numérico (integer)
-    }
-    
-    throw new Error("CBO não encontrado");
+function vazio(valor) {
+    return valor === undefined || valor === "" ? null : valor;
+}
+
+function numeroOuNull(valor) {
+    if (valor === undefined || valor === "" || valor === null) return null;
+    const numero = Number(valor);
+    return isNaN(numero) ? null : numero;
+}
+
+// Função para limpar a string do CBO digitada manualmente
+function tratarCboTexto(valorCbo) {
+    if (!valorCbo) return null;
+    // Se o usuário colou algo como "4142-15 - Almoxarife", extrai apenas "4142-15"
+    const codigoLimpo = String(valorCbo).split(' - ')[0].trim();
+    return codigoLimpo || null;
 }
 
 // 1. Rota para listar os cargos cadastrados
 router.get('/', async (req, res) => {
     try {
-        // Fazemos um JOIN com a tabela cbo para pegar o código em texto
         const query = `
             SELECT 
-                c.*, 
-                cbo.codigo AS cbo 
+                c.id, 
+                c.nome, 
+                c.cbo, 
+                c.hora_entrada, 
+                c.saida_almoco, 
+                c.retorno_almoco, 
+                c.hora_saida, 
+                c.carga_horaria
             FROM cargos c
-            LEFT JOIN cbo ON c.cbo_id = cbo.id
-            ORDER BY c.id DESC
+            ORDER BY c.nome ASC
         `;
         const resultado = await pool.query(query);
         res.json(resultado.rows);
     } catch (erro) {
-        console.error("Erro ao buscar cargos:", erro);
+        console.error("Erro ao buscar cargos no Supabase:", erro);
         res.status(500).json({ erro: "Erro interno ao buscar cargos" });
     }
 });
 
-// 2. Rota para listar os códigos CBO (Adicionado o 'id' no SELECT por precaução)
-router.get('/cbo', async (req, res) => {
-    try {
-        const resultado = await pool.query('SELECT id, codigo, nome, descricao FROM cbo WHERE ativo = true ORDER BY codigo ASC');
-        res.json(resultado.rows);
-    } catch (erro) {
-        console.error("Erro ao buscar CBOs:", erro);
-        res.status(500).json({ erro: "Erro interno ao buscar CBOs" });
-    }
-});
-
-// 3. Rota para salvar um novo cargo
+// 2. Rota para salvar um novo cargo
 router.post('/', async (req, res) => {
     const { 
         nome_interno, 
-        cbo, // Aqui chega "4142-15"
+        cbo, 
         hora_entrada, 
         hora_saida_almoco, 
         hora_retorno_almoco, 
@@ -63,89 +58,62 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     try {
-        // TRADUÇÃO DO CBO: Transforma "4142-15" no ID inteiro que o banco exige
-        let cboIdCorreto;
-        try {
-            cboIdCorreto = await obterIdCbo(cbo, pool);
-        } catch (erroCbo) {
-            return res.status(400).json({ erro: "Código CBO inválido ou não encontrado no banco de dados." });
-        }
+        const cboTratado = tratarCboTexto(cbo);
 
         const query = `
             INSERT INTO cargos (
                 nome, 
-                cbo_id, 
+                cbo, 
                 hora_entrada, 
                 saida_almoco, 
                 retorno_almoco, 
                 hora_saida, 
-                carga_horaria
+                carga_horaria, 
+                ativo
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, true)
             RETURNING *;
         `;
         
         const valores = [
-            nome_interno, 
-            cboIdCorreto, // Salvando o número inteiro!
-            hora_entrada, 
-            hora_saida_almoco, 
-            hora_retorno_almoco, 
-            hora_saida, 
-            carga_horaria
+            vazio(nome_interno), 
+            cboTratado, 
+            vazio(hora_entrada), 
+            vazio(hora_saida_almoco), 
+            vazio(hora_retorno_almoco), 
+            vazio(hora_saida), 
+            numeroOuNull(carga_horaria)
         ];
 
         const novoCargo = await pool.query(query, valores);
         res.status(201).json(novoCargo.rows[0]);
 
     } catch (erro) {
-        console.error("Erro ao salvar cargo no banco:", erro);
-        res.status(500).json({ erro: "Erro interno ao salvar cargo" });
+        console.error("Erro ao salvar cargo no Supabase:", erro);
+        res.status(500).json({ erro: "Erro interno ao salvar cargo: " + erro.message });
     }
 });
 
-// 4. Rota para deletar um cargo verificando vínculos
-router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const checkVinculo = await pool.query('SELECT nome FROM funcionarios WHERE cargo_id = $1 LIMIT 1', [id]);
-        
-        if (checkVinculo.rows.length > 0) {
-            const nomeFuncionario = checkVinculo.rows[0].nome;
-            return res.status(400).json({ 
-                erro: `Este cargo não pode ser excluído pois está vinculado ao funcionário(a): ${nomeFuncionario}. Remova o vínculo do funcionário primeiro.` 
-            });
-        }
-
-        await pool.query('DELETE FROM cargos WHERE id = $1', [id]);
-        res.json({ mensagem: "Cargo excluído com sucesso!" });
-
-    } catch (erro) {
-        console.error("Erro ao excluir cargo:", erro);
-        res.status(500).json({ erro: "Erro interno ao excluir cargo" });
-    }
-});
-
-// 5. Rota para atualizar (editar) um cargo
+// 3. Rota para atualizar (editar) um cargo
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { 
-        nome_interno, cbo, hora_entrada, hora_saida_almoco, hora_retorno_almoco, hora_saida, carga_horaria 
+        nome_interno, 
+        cbo, 
+        hora_entrada, 
+        hora_saida_almoco, 
+        hora_retorno_almoco, 
+        hora_saida, 
+        carga_horaria 
     } = req.body;
     
     try {
-        // TRADUÇÃO DO CBO PARA A EDIÇÃO TAMBÉM
-        let cboIdCorreto;
-        try {
-            cboIdCorreto = await obterIdCbo(cbo, pool);
-        } catch (erroCbo) {
-            return res.status(400).json({ erro: "Código CBO inválido ou não encontrado no banco de dados." });
-        }
+        const cboTratado = tratarCboTexto(cbo);
 
         const query = `
             UPDATE cargos 
             SET nome = $1, 
-                cbo_id = $2, 
+                cbo = $2, 
                 hora_entrada = $3, 
                 saida_almoco = $4, 
                 retorno_almoco = $5, 
@@ -153,17 +121,40 @@ router.put('/:id', async (req, res) => {
                 carga_horaria = $7
             WHERE id = $8 RETURNING *;
         `;
-        const valores = [nome_interno, cboIdCorreto, hora_entrada, hora_saida_almoco, hora_retorno_almoco, hora_saida, carga_horaria, id];
+        
+        const valores = [
+            vazio(nome_interno), 
+            cboTratado, 
+            vazio(hora_entrada), 
+            vazio(hora_saida_almoco), 
+            vazio(hora_retorno_almoco), 
+            vazio(hora_saida), 
+            numeroOuNull(carga_horaria), 
+            id
+        ];
         
         const resultado = await pool.query(query, valores);
-        
+
         if (resultado.rows.length === 0) {
             return res.status(404).json({ erro: "Cargo não encontrado" });
         }
+
         res.json(resultado.rows[0]);
     } catch (erro) {
-        console.error("Erro ao atualizar cargo:", erro);
-        res.status(500).json({ erro: "Erro interno ao atualizar cargo" });
+        console.error("Erro ao atualizar cargo no Supabase:", erro);
+        res.status(500).json({ erro: "Erro interno ao atualizar cargo: " + erro.message });
+    }
+});
+
+// 4. Rota para deletar um cargo
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM cargos WHERE id = $1', [id]);
+        res.json({ mensagem: "Cargo excluído com sucesso!" });
+    } catch (erro) {
+        console.error("Erro ao excluir cargo no Supabase:", erro);
+        res.status(500).json({ erro: "Erro ao excluir cargo. Verifique se há funcionários vinculados." });
     }
 });
 
