@@ -1,57 +1,63 @@
-require('dotenv').config(); // Mantido caso o seu back-end use o .env para outras coisas (como a porta)
-const { Pool } = require('pg');
+require("dotenv").config();
+
+const { Pool } = require("pg");
+
+// =====================================================
+// CONEXÃO COM POSTGRESQL / SUPABASE
+// =====================================================
+//
+// IMPORTANTE:
+// No Render, use a CONNECTION STRING do
+// SUPABASE SESSION POOLER.
+//
+// Ela deve terminar em:
+// :5432/postgres
+//
+// NÃO use:
+// db.xxxxx.supabase.co:5432
+//
+// Use:
+// aws-0-xxxxx.pooler.supabase.com:5432
+// =====================================================
 
 const pool = new Pool({
-  // URL de conexão colocada diretamente aqui:
-  connectionString: "postgresql://postgres:Pqixw0i3jIvCBKUK@db.kntjzksaokqoavwjkqnm.supabase.co:5432/postgres",
-  // ⚠️ SSL obrigatório mantido
-  ssl: {
-    rejectUnauthorized: false
-  },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000
+    connectionString: process.env.DATABASE_URL,
+
+    ssl: {
+        rejectUnauthorized: false
+    },
+
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000
 });
 
-// ✅ Teste de conexão
+// =====================================================
+// TESTE DE CONEXÃO
+// =====================================================
+
 pool.connect()
-  .then(client => {
-    console.log("✅ Conectado ao PostgreSQL (Supabase) com sucesso!");
-    client.release();
-  })
-  .catch(err => {
-    console.error("❌ Erro na conexão com o PostgreSQL:");
-    console.error(err);
-  });
+    .then((client) => {
+        console.log("======================================");
+        console.log("✅ CONECTADO AO POSTGRESQL / SUPABASE");
+        console.log("======================================");
 
-// Função para garantir que as tabelas existem
-const initDB = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS funcionarios (
-        id SERIAL PRIMARY KEY,
-        nome VARCHAR(100),
-        data_admissao DATE,
-        pis_pasep VARCHAR(20),
-        salario_base NUMERIC(10,2),
-        banco VARCHAR(50),
-        conta_bancaria VARCHAR(20)
-      );
+        client.release();
+    })
+    .catch((err) => {
+        console.error("======================================");
+        console.error("❌ ERRO AO CONECTAR AO POSTGRESQL");
+        console.error("======================================");
+        console.error("Mensagem:", err.message);
+        console.error("Código:", err.code);
+        console.error("Host:", process.env.DATABASE_URL
+            ? process.env.DATABASE_URL.replace(/\/\/.*@/, "//***@")
+            : "DATABASE_URL não configurada"
+        );
+    });
 
-      CREATE TABLE IF NOT EXISTS registros_ponto (
-        id SERIAL PRIMARY KEY,
-        funcionario_id INTEGER REFERENCES funcionarios(id),
-        data_registro DATE DEFAULT CURRENT_DATE,
-        hora_entrada TIME,
-        hora_saida TIME
-      );
-    `);
-
-    console.log("✅ Estrutura do Banco de Dados verificada e pronta!");
-  } catch (err) {
-    console.error("❌ Erro ao inicializar tabelas:");
-    console.error(err);
-  }
-};
+// =====================================================
+// EXPORTAR POOL
+// =====================================================
 
 module.exports = pool;
