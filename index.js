@@ -1,12 +1,6 @@
 const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first'); // <--- Adicione isso aqui
 
-const express = require('express');
-// ... resto do seu código ...
-
-
-
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
