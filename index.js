@@ -34,8 +34,9 @@ const dashboardRoutes = require("./routes/dashboard");
 const controlePontoRoutes = require("./routes/controle_ponto");
 const fechamentoRoutes = require("./routes/fechamento");
 
-// 👇 O ARQUIVO QUE VOCÊ ACABOU DE CRIAR!
+// 👇 OS SEUS ARQUIVOS NOVOS AQUI!
 const rotasConfiguracoes = require('./routes/configuracoes'); 
+const holeritesRoutes = require('./routes/holerites'); // <--- PLUGUEI O HOLERITE AQUI!
 
 // ===============================
 // REGISTRAR ROTAS DA API
@@ -47,6 +48,9 @@ app.use("/api/dashboard", dashboardRoutes);
 
 // ✅ Rota de Configurações Pluggada!
 app.use('/api/configuracoes', rotasConfiguracoes);
+
+// ✅ Rota de Holerites Pluggada!
+app.use('/api/holerites', holeritesRoutes); // <--- LIGUEI O HOLERITE NA TOMADA AQUI!
 
 // ✅ SUPORTE DUPLO PARA VALES (PLURAL E SINGULAR - RESOLVE O 404)
 app.use("/api/vale", valeRoutes);
@@ -62,7 +66,8 @@ app.use("/api/folha", folhaRoutes);
 app.use("/api/empresa", empresaRoutes); 
 
 // Rotas Administrativas (/api/rh/)
-app.use("/api/rh/configuracoes", rotasConfiguracoes); // Usei a mesma rota nova aqui
+app.use("/api/rh/configuracoes", rotasConfiguracoes);
+app.use("/api/rh/holerites", holeritesRoutes); // <--- LIGUEI O HOLERITE AQUI TAMBÉM POR GARANTIA!
 app.use("/api/rh/fechamento", fechamentoRoutes);
 app.use("/api/rh/ponto", pontoRoutes);
 app.use("/api/rh/empresa", empresaRoutes);

@@ -1,172 +1,611 @@
-<div class="conteudo">
+<!-- =========================================================
+     PONTOCOM RH - TELA DE CARGOS
+     ========================================================= -->
 
-    <!-- Estilos da Tela de Cargos -->
-    <style>
-        .cargo-form-container, .cargo-table-container {
-            background-color: #151c2c;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 800px;
-            margin: 0 auto 24px auto;
-            color: #f8fafc;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+<style>
+    :root {
+        --cargo-bg: #0b0f19;
+        --cargo-card: #151c2c;
+        --cargo-card-2: #111827;
+        --cargo-input: #0b0f19;
+        --cargo-border: rgba(255, 255, 255, 0.08);
+        --cargo-text: #f8fafc;
+        --cargo-muted: #94a3b8;
+        --cargo-blue: #38bdf8;
+        --cargo-blue-dark: #0284c7;
+        --cargo-red: #f43f5e;
+        --cargo-yellow: #fbbf24;
+        --cargo-green: #10b981;
+    }
+
+    /* =====================================================
+       CONTAINER PRINCIPAL
+       ===================================================== */
+
+    .cargos-page {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 25px;
+        color: var(--cargo-text);
+    }
+
+    .cargos-page-header {
+        margin-bottom: 22px;
+    }
+
+    .cargos-page-header h1 {
+        margin: 0 0 6px 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #ffffff;
+    }
+
+    .cargos-page-header p {
+        margin: 0;
+        color: var(--cargo-muted);
+        font-size: 13px;
+    }
+
+    /* =====================================================
+       CARDS
+       ===================================================== */
+
+    .cargo-form-container,
+    .cargo-table-container {
+        width: 100%;
+        background: var(--cargo-card);
+        border: 1px solid var(--cargo-border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        color: var(--cargo-text);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.30);
+    }
+
+    /* =====================================================
+       TÍTULOS DAS SEÇÕES
+       ===================================================== */
+
+    .cargo-form-section {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--cargo-blue);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 14px;
+        margin-top: 22px;
+        border-bottom: 1px solid var(--cargo-border);
+        padding-bottom: 8px;
+    }
+
+    .cargo-form-section:first-child {
+        margin-top: 0;
+    }
+
+    /* =====================================================
+       GRID
+       ===================================================== */
+
+    .cargo-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-bottom: 16px;
+    }
+
+    /* =====================================================
+       CAMPOS
+       ===================================================== */
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .input-group label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--cargo-muted);
+    }
+
+    .input-group input {
+        width: 100%;
+        height: 46px;
+        background-color: var(--cargo-input);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--cargo-text);
+        font-size: 14px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+    .input-group input::placeholder {
+        color: #64748b;
+    }
+
+    .input-group input:focus {
+        border-color: var(--cargo-blue);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.10);
+    }
+
+    /* =====================================================
+       BOTÃO SALVAR
+       ===================================================== */
+
+    .btn-salvar-cargo {
+        width: 100%;
+        height: 48px;
+        padding: 0 14px;
+        background: var(--cargo-blue);
+        color: #0b0f19;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: 0.2s;
+    }
+
+    .btn-salvar-cargo:hover {
+        background: #7dd3fc;
+        transform: translateY(-1px);
+    }
+
+    .btn-salvar-cargo:disabled {
+        opacity: 0.6;
+        cursor: wait;
+        transform: none;
+    }
+
+    /* =====================================================
+       ÁREA DE STATUS
+       ===================================================== */
+
+    .cargo-status {
+        display: none;
+        margin-top: 15px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .cargo-status.sucesso {
+        display: block;
+        background: rgba(16, 185, 129, 0.10);
+        border: 1px solid rgba(16, 185, 129, 0.30);
+        color: #6ee7b7;
+    }
+
+    .cargo-status.erro {
+        display: block;
+        background: rgba(244, 63, 94, 0.10);
+        border: 1px solid rgba(244, 63, 94, 0.30);
+        color: #fda4af;
+    }
+
+    .cargo-status.info {
+        display: block;
+        background: rgba(56, 189, 248, 0.10);
+        border: 1px solid rgba(56, 189, 248, 0.30);
+        color: #7dd3fc;
+    }
+
+    /* =====================================================
+       CABEÇALHO DA TABELA
+       ===================================================== */
+
+    .cargos-tabela-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 5px;
+    }
+
+    .cargos-tabela-header .cargo-form-section {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .btn-atualizar-cargos {
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(56, 189, 248, 0.10);
+        color: var(--cargo-blue);
+        padding: 9px 14px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .btn-atualizar-cargos:hover {
+        background: rgba(56, 189, 248, 0.18);
+    }
+
+    /* =====================================================
+       TABELA
+       ===================================================== */
+
+    .tabela-cargos-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .tabela-cargos {
+        width: 100%;
+        min-width: 700px;
+        border-collapse: collapse;
+        margin-top: 14px;
+        font-size: 13px;
+    }
+
+    .tabela-cargos th,
+    .tabela-cargos td {
+        padding: 14px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--cargo-border);
+        vertical-align: middle;
+    }
+
+    .tabela-cargos th {
+        color: var(--cargo-muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .tabela-cargos td {
+        color: #e2e8f0;
+    }
+
+    .tabela-cargos tbody tr {
+        transition: 0.15s;
+    }
+
+    .tabela-cargos tbody tr:hover {
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .cargo-nome {
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .cargo-cbo {
+        color: var(--cargo-muted);
+    }
+
+    .cargo-horario {
+        color: #cbd5e1;
+        white-space: nowrap;
+    }
+
+    .cargo-carga {
+        color: var(--cargo-blue);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* =====================================================
+       BOTÕES DE AÇÃO
+       ===================================================== */
+
+    .acoes-cargo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .btn-acao {
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 8px 11px;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+
+    .btn-editar {
+        color: var(--cargo-blue);
+        background: rgba(56, 189, 248, 0.10);
+        border: 1px solid rgba(56, 189, 248, 0.20);
+    }
+
+    .btn-editar:hover {
+        background: rgba(56, 189, 248, 0.18);
+    }
+
+    .btn-excluir {
+        color: #fb7185;
+        background: rgba(244, 63, 94, 0.08);
+        border: 1px solid rgba(244, 63, 94, 0.18);
+    }
+
+    .btn-excluir:hover {
+        background: rgba(244, 63, 94, 0.16);
+    }
+
+    /* =====================================================
+       CARREGANDO
+       ===================================================== */
+
+    .cargos-loading {
+        text-align: center !important;
+        padding: 25px !important;
+        color: var(--cargo-muted) !important;
+    }
+
+    .cargos-loading-spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-top-color: var(--cargo-blue);
+        border-radius: 50%;
+        animation: cargosSpin 0.8s linear infinite;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+
+    @keyframes cargosSpin {
+        to {
+            transform: rotate(360deg);
         }
+    }
 
-        .cargo-form-section {
-            font-size: 13px;
-            font-weight: 700;
-            color: #38bdf8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            margin-top: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 6px;
+    /* =====================================================
+       VAZIO
+       ===================================================== */
+
+    .cargos-vazio {
+        text-align: center !important;
+        padding: 30px !important;
+        color: var(--cargo-muted) !important;
+    }
+
+    /* =====================================================
+       RESPONSIVO
+       ===================================================== */
+
+    @media (max-width: 800px) {
+        .cargos-page {
+            padding: 15px;
         }
-
-        .cargo-form-section:first-child { margin-top: 0; }
 
         .cargo-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
+            grid-template-columns: 1fr;
+            gap: 14px;
         }
 
-        @media (max-width: 600px) {
-            .cargo-grid-2 { grid-template-columns: 1fr; }
+        .cargo-form-container,
+        .cargo-table-container {
+            padding: 18px;
         }
 
-        .input-group {
-            display: flex;
+        .cargos-tabela-header {
+            align-items: flex-start;
             flex-direction: column;
-            gap: 6px;
         }
 
-        .input-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        .input-group input {
-            background-color: #0b0f19;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 12px;
-            color: #f8fafc;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .input-group input:focus {
-            border-color: #38bdf8;
-        }
-
-        .btn-salvar-cargo {
+        .btn-atualizar-cargos {
             width: 100%;
-            padding: 14px;
-            background-color: #38bdf8;
-            color: #0b0f19;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
         }
+    }
+</style>
 
-        /* Tabela de Cargos Cadastrados */
-        .tabela-cargos {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 14px;
-        }
 
-        .tabela-cargos th, .tabela-cargos td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
+<!-- =========================================================
+     CONTEÚDO DA TELA
+     ========================================================= -->
 
-        .tabela-cargos th {
-            color: #94a3b8;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
+<div class="cargos-page">
 
-        .btn-acao {
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .btn-editar { color: #38bdf8; margin-right: 12px; }
-        .btn-excluir { color: #f43f5e; }
-    </style>
-
-    <!-- FORMULÁRIO DE CADASTRO/EDIÇÃO -->
-    <div class="cargo-form-container">
-        <form id="formCargo" onsubmit="salvarCargo(event)">
-            
-            <div class="cargo-form-section">Informações Básicas</div>
-            <div class="cargo-grid-2">
-                <div class="input-group">
-                    <label for="nomeCargo">Cargo Interno da Empresa</label>
-                    <input type="text" id="nomeCargo" required placeholder="Ex: Auxiliar Mecânico">
-                </div>
-                
-                <div class="input-group">
-                    <label for="cboCargo">CBO (Opcional)</label>
-                    <input type="text" id="cboCargo" placeholder="Ex: 4142-15 ou deixe em branco">
-                </div>
-            </div>
-
-            <div class="cargo-form-section">Jornada de Trabalho Padrão</div>
-            <div class="cargo-grid-2">
-                <div class="input-group">
-                    <label for="horaEntrada">Entrada</label>
-                    <input type="time" id="horaEntrada" required>
-                </div>
-                <div class="input-group">
-                    <label for="horaSaidaAlmoco">Saída Almoço</label>
-                    <input type="time" id="horaSaidaAlmoco" required>
-                </div>
-            </div>
-
-            <div class="cargo-grid-2">
-                <div class="input-group">
-                    <label for="horaRetornoAlmoco">Retorno Almoço</label>
-                    <input type="time" id="horaRetornoAlmoco" required>
-                </div>
-                <div class="input-group">
-                    <label for="horaSaida">Saída</label>
-                    <input type="time" id="horaSaida" required>
-                </div>
-            </div>
-
-            <div class="cargo-form-section">Carga Horária</div>
-            <div class="input-group" style="margin-bottom: 16px;">
-                <label for="cargaHoraria">Carga Horária Mensal (Horas)</label>
-                <input type="number" id="cargaHoraria" required placeholder="Ex: 220" min="1" max="300">
-            </div>
-
-            <button type="submit" class="btn-salvar-cargo" id="btnSalvar">
-                💾 Salvar Cargo
-            </button>
-        </form>
+    <!-- CABEÇALHO -->
+    <div class="cargos-page-header">
+        <h1>💼 Gestão de Cargos</h1>
+        <p>
+            Cadastre, edite e gerencie os cargos e suas jornadas de trabalho.
+        </p>
     </div>
 
-    <!-- LISTAGEM DE CARGOS -->
+
+    <!-- =====================================================
+         FORMULÁRIO
+         ===================================================== -->
+
+    <div class="cargo-form-container">
+
+        <form id="formCargo">
+
+            <!-- INFORMAÇÕES BÁSICAS -->
+            <div class="cargo-form-section">
+                Informações Básicas
+            </div>
+
+            <div class="cargo-grid-2">
+
+                <div class="input-group">
+                    <label for="nomeCargo">
+                        Cargo Interno da Empresa
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nomeCargo"
+                        required
+                        placeholder="Ex: Auxiliar Mecânico"
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="cboCargo">
+                        CBO (Opcional)
+                    </label>
+
+                    <input
+                        type="text"
+                        id="cboCargo"
+                        placeholder="Ex: 4142-15 ou deixe em branco"
+                    >
+                </div>
+
+            </div>
+
+
+            <!-- JORNADA -->
+            <div class="cargo-form-section">
+                Jornada de Trabalho Padrão
+            </div>
+
+
+            <div class="cargo-grid-2">
+
+                <div class="input-group">
+                    <label for="horaEntrada">
+                        Entrada
+                    </label>
+
+                    <input
+                        type="time"
+                        id="horaEntrada"
+                        required
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="horaSaidaAlmoco">
+                        Saída Almoço
+                    </label>
+
+                    <input
+                        type="time"
+                        id="horaSaidaAlmoco"
+                        required
+                    >
+                </div>
+
+            </div>
+
+
+            <div class="cargo-grid-2">
+
+                <div class="input-group">
+                    <label for="horaRetornoAlmoco">
+                        Retorno Almoço
+                    </label>
+
+                    <input
+                        type="time"
+                        id="horaRetornoAlmoco"
+                        required
+                    >
+                </div>
+
+
+                <div class="input-group">
+                    <label for="horaSaida">
+                        Saída
+                    </label>
+
+                    <input
+                        type="time"
+                        id="horaSaida"
+                        required
+                    >
+                </div>
+
+            </div>
+
+
+            <!-- CARGA HORÁRIA -->
+            <div class="cargo-form-section">
+                Carga Horária
+            </div>
+
+
+            <div
+                class="input-group"
+                style="margin-bottom: 16px;"
+            >
+
+                <label for="cargaHoraria">
+                    Carga Horária Mensal (Horas)
+                </label>
+
+                <input
+                    type="number"
+                    id="cargaHoraria"
+                    required
+                    placeholder="Ex: 220"
+                    min="1"
+                    max="300"
+                >
+
+            </div>
+
+
+            <!-- BOTÃO -->
+            <button
+                type="submit"
+                class="btn-salvar-cargo"
+                id="btnSalvar"
+            >
+                💾 Salvar Cargo
+            </button>
+
+
+            <!-- STATUS -->
+            <div
+                id="cargoStatus"
+                class="cargo-status"
+            ></div>
+
+        </form>
+
+    </div>
+
+
+    <!-- =====================================================
+         LISTAGEM
+         ===================================================== -->
+
     <div class="cargo-table-container">
-        <div class="cargo-form-section">Cargos Cadastrados</div>
-        <div style="overflow-x: auto;">
+
+        <div class="cargos-tabela-header">
+
+            <div class="cargo-form-section">
+                Cargos Cadastrados
+            </div>
+
+            <button
+                type="button"
+                class="btn-atualizar-cargos"
+                id="btnAtualizarCargos"
+            >
+                🔄 Atualizar
+            </button>
+
+        </div>
+
+
+        <div class="tabela-cargos-wrapper">
+
             <table class="tabela-cargos">
+
                 <thead>
+
                     <tr>
                         <th>Cargo Interno</th>
                         <th>CBO</th>
@@ -174,12 +613,985 @@
                         <th>Horário</th>
                         <th>Ações</th>
                     </tr>
+
                 </thead>
+
+
                 <tbody id="tabelaCargosBody">
-                    <tr><td colspan="5" style="text-align: center; color: #94a3b8;">Carregando cargos...</td></tr>
+
+                    <tr>
+                        <td
+                            colspan="5"
+                            class="cargos-loading"
+                        >
+                            <span class="cargos-loading-spinner"></span>
+                            Carregando cargos...
+                        </td>
+                    </tr>
+
                 </tbody>
+
             </table>
+
         </div>
+
     </div>
 
 </div>
+
+
+<!-- =========================================================
+     JAVASCRIPT DA TELA
+     
+     IMPORTANTE:
+     O código está aqui de propósito.
+     Assim não dependemos do carregamento de js/cargos.js
+     quando o sistema injeta essa tela dinamicamente.
+     ========================================================= -->
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    /* =====================================================
+       CONFIGURAÇÃO AUTOMÁTICA DA API
+       ===================================================== */
+
+    const API_URL =
+        (
+            window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1"
+        )
+            ? "http://localhost:3000"
+            : "https://pontocom-backend.onrender.com";
+
+
+    console.log("=====================================");
+    console.log("PONTOCOM RH - CARGOS");
+    console.log("API utilizada:", API_URL);
+    console.log("=====================================");
+
+
+    /* =====================================================
+       VARIÁVEIS
+       ===================================================== */
+
+    let listaCargosGlobal = [];
+    let cargoEmEdicaoId = null;
+
+
+    /* =====================================================
+       ELEMENTOS
+       ===================================================== */
+
+    function pegarElemento(id) {
+        return document.getElementById(id);
+    }
+
+
+    /* =====================================================
+       STATUS
+       ===================================================== */
+
+    function mostrarStatus(mensagem, tipo) {
+
+        const status = pegarElemento("cargoStatus");
+
+        if (!status) return;
+
+        status.className = "cargo-status " + tipo;
+        status.textContent = mensagem;
+
+    }
+
+
+    function esconderStatus() {
+
+        const status = pegarElemento("cargoStatus");
+
+        if (!status) return;
+
+        status.className = "cargo-status";
+        status.textContent = "";
+
+    }
+
+
+    /* =====================================================
+       FORMATA HORA
+       ===================================================== */
+
+    function formatarHora(hora) {
+
+        if (!hora) {
+            return "--:--";
+        }
+
+        return String(hora).substring(0, 5);
+
+    }
+
+
+    /* =====================================================
+       CARREGAR CARGOS
+       ===================================================== */
+
+    async function carregarListaCargos() {
+
+        const tbody = pegarElemento("tabelaCargosBody");
+
+        if (!tbody) {
+            console.error(
+                "❌ Elemento tabelaCargosBody não encontrado."
+            );
+            return;
+        }
+
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="cargos-loading">
+                    <span class="cargos-loading-spinner"></span>
+                    Carregando cargos...
+                </td>
+            </tr>
+        `;
+
+
+        try {
+
+            console.log(
+                "🔎 Buscando cargos em:",
+                API_URL + "/api/cargos"
+            );
+
+
+            const resposta = await fetch(
+                API_URL + "/api/cargos",
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    cache: "no-cache"
+                }
+            );
+
+
+            console.log(
+                "📡 Status da resposta:",
+                resposta.status
+            );
+
+
+            if (!resposta.ok) {
+
+                const textoErro =
+                    await resposta.text().catch(() => "");
+
+                console.error(
+                    "❌ Erro HTTP:",
+                    resposta.status,
+                    textoErro
+                );
+
+                throw new Error(
+                    "Servidor respondeu HTTP " +
+                    resposta.status
+                );
+
+            }
+
+
+            const dados = await resposta.json();
+
+
+            console.log(
+                "✅ Cargos recebidos:",
+                dados
+            );
+
+
+            if (!Array.isArray(dados)) {
+
+                throw new Error(
+                    "A API não retornou uma lista de cargos."
+                );
+
+            }
+
+
+            listaCargosGlobal = dados;
+
+
+            renderizarTabelaCargos();
+
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro ao carregar cargos:",
+                erro
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="5"
+                        style="
+                            text-align:center;
+                            padding:30px;
+                            color:#fda4af;
+                        "
+                    >
+                        ❌ Não foi possível carregar os cargos.
+                        <br>
+                        <small style="color:#94a3b8;">
+                            ${erro.message || "Erro de comunicação com o servidor"}
+                        </small>
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       RENDERIZAR TABELA
+       ===================================================== */
+
+    function renderizarTabelaCargos() {
+
+        const tbody = pegarElemento("tabelaCargosBody");
+
+        if (!tbody) return;
+
+
+        if (
+            !listaCargosGlobal ||
+            listaCargosGlobal.length === 0
+        ) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td
+                        colspan="5"
+                        class="cargos-vazio"
+                    >
+                        Nenhum cargo cadastrado.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tbody.innerHTML = "";
+
+
+        listaCargosGlobal.forEach(function (cargo) {
+
+            const nome =
+                cargo.nome ||
+                cargo.nome_interno ||
+                "Cargo sem nome";
+
+
+            const cbo =
+                cargo.cbo ||
+                "Sem CBO";
+
+
+            const carga =
+                cargo.carga_horaria !== null &&
+                cargo.carga_horaria !== undefined
+                    ? cargo.carga_horaria + " h/mês"
+                    : "--";
+
+
+            const entrada =
+                formatarHora(
+                    cargo.hora_entrada
+                );
+
+
+            const saidaAlmoco =
+                formatarHora(
+                    cargo.saida_almoco ||
+                    cargo.hora_saida_almoco
+                );
+
+
+            const retornoAlmoco =
+                formatarHora(
+                    cargo.retorno_almoco ||
+                    cargo.hora_retorno_almoco
+                );
+
+
+            const saida =
+                formatarHora(
+                    cargo.hora_saida
+                );
+
+
+            const tr =
+                document.createElement("tr");
+
+
+            tr.innerHTML = `
+
+                <td>
+                    <div class="cargo-nome">
+                        ${escaparHTML(nome)}
+                    </div>
+                </td>
+
+                <td>
+                    <span class="cargo-cbo">
+                        ${escaparHTML(cbo)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="cargo-carga">
+                        ${escaparHTML(carga)}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="cargo-horario">
+                        ${entrada}
+                        às
+                        ${saidaAlmoco}
+                        <br>
+                        ${retornoAlmoco}
+                        às
+                        ${saida}
+                    </span>
+                </td>
+
+                <td>
+
+                    <div class="acoes-cargo">
+
+                        <button
+                            type="button"
+                            class="btn-acao btn-editar"
+                            data-id="${cargo.id}"
+                        >
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn-acao btn-excluir"
+                            data-id="${cargo.id}"
+                        >
+                            🗑️ Excluir
+                        </button>
+
+                    </div>
+
+                </td>
+
+            `;
+
+
+            /* BOTÃO EDITAR */
+
+            const btnEditar =
+                tr.querySelector(".btn-editar");
+
+
+            btnEditar.addEventListener(
+                "click",
+                function () {
+
+                    editarCargo(
+                        Number(this.dataset.id)
+                    );
+
+                }
+            );
+
+
+            /* BOTÃO EXCLUIR */
+
+            const btnExcluir =
+                tr.querySelector(".btn-excluir");
+
+
+            btnExcluir.addEventListener(
+                "click",
+                function () {
+
+                    deletarCargo(
+                        Number(this.dataset.id)
+                    );
+
+                }
+            );
+
+
+            tbody.appendChild(tr);
+
+        });
+
+    }
+
+
+    /* =====================================================
+       PROTEÇÃO CONTRA HTML
+       ===================================================== */
+
+    function escaparHTML(valor) {
+
+        return String(valor)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    /* =====================================================
+       EDITAR CARGO
+       ===================================================== */
+
+    function editarCargo(id) {
+
+        const cargo =
+            listaCargosGlobal.find(
+                function (item) {
+                    return Number(item.id) === Number(id);
+                }
+            );
+
+
+        if (!cargo) {
+
+            alert(
+                "Cargo não encontrado na lista."
+            );
+
+            return;
+
+        }
+
+
+        cargoEmEdicaoId = id;
+
+
+        pegarElemento("nomeCargo").value =
+            cargo.nome ||
+            cargo.nome_interno ||
+            "";
+
+
+        pegarElemento("cboCargo").value =
+            cargo.cbo ||
+            "";
+
+
+        pegarElemento("horaEntrada").value =
+            formatarHoraParaInput(
+                cargo.hora_entrada
+            );
+
+
+        pegarElemento("horaSaidaAlmoco").value =
+            formatarHoraParaInput(
+                cargo.saida_almoco ||
+                cargo.hora_saida_almoco
+            );
+
+
+        pegarElemento("horaRetornoAlmoco").value =
+            formatarHoraParaInput(
+                cargo.retorno_almoco ||
+                cargo.hora_retorno_almoco
+            );
+
+
+        pegarElemento("horaSaida").value =
+            formatarHoraParaInput(
+                cargo.hora_saida
+            );
+
+
+        pegarElemento("cargaHoraria").value =
+            cargo.carga_horaria || "";
+
+
+        const btnSalvar =
+            pegarElemento("btnSalvar");
+
+
+        btnSalvar.textContent =
+            "✏️ Atualizar Cargo";
+
+
+        btnSalvar.style.background =
+            "#fbbf24";
+
+
+        btnSalvar.style.color =
+            "#0b0f19";
+
+
+        mostrarStatus(
+            "Editando o cargo: " +
+            (cargo.nome || cargo.nome_interno),
+            "info"
+        );
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    }
+
+
+    /* =====================================================
+       FORMATA HORA PARA INPUT TIME
+       ===================================================== */
+
+    function formatarHoraParaInput(hora) {
+
+        if (!hora) return "";
+
+        return String(hora).substring(0, 5);
+
+    }
+
+
+    /* =====================================================
+       RESET DO FORMULÁRIO
+       ===================================================== */
+
+    function resetarFormulario() {
+
+        const form =
+            pegarElemento("formCargo");
+
+
+        if (form) {
+            form.reset();
+        }
+
+
+        cargoEmEdicaoId = null;
+
+
+        const btnSalvar =
+            pegarElemento("btnSalvar");
+
+
+        if (btnSalvar) {
+
+            btnSalvar.textContent =
+                "💾 Salvar Cargo";
+
+            btnSalvar.style.background =
+                "#38bdf8";
+
+            btnSalvar.style.color =
+                "#0b0f19";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SALVAR / ATUALIZAR
+       ===================================================== */
+
+    async function salvarCargo(event) {
+
+        event.preventDefault();
+
+
+        esconderStatus();
+
+
+        const nome =
+            pegarElemento("nomeCargo").value.trim();
+
+
+        const cbo =
+            pegarElemento("cboCargo").value.trim();
+
+
+        const horaEntrada =
+            pegarElemento("horaEntrada").value;
+
+
+        const horaSaidaAlmoco =
+            pegarElemento("horaSaidaAlmoco").value;
+
+
+        const horaRetornoAlmoco =
+            pegarElemento("horaRetornoAlmoco").value;
+
+
+        const horaSaida =
+            pegarElemento("horaSaida").value;
+
+
+        const cargaHoraria =
+            pegarElemento("cargaHoraria").value;
+
+
+        if (!nome) {
+
+            mostrarStatus(
+                "Informe o nome do cargo.",
+                "erro"
+            );
+
+            return;
+
+        }
+
+
+        const payload = {
+
+            nome_interno: nome,
+
+            cbo: cbo,
+
+            hora_entrada: horaEntrada,
+
+            hora_saida_almoco: horaSaidaAlmoco,
+
+            hora_retorno_almoco: horaRetornoAlmoco,
+
+            hora_saida: horaSaida,
+
+            carga_horaria: cargaHoraria
+
+        };
+
+
+        const editando =
+            cargoEmEdicaoId !== null;
+
+
+        const url =
+            editando
+                ? API_URL +
+                  "/api/cargos/" +
+                  cargoEmEdicaoId
+                : API_URL +
+                  "/api/cargos";
+
+
+        const metodo =
+            editando
+                ? "PUT"
+                : "POST";
+
+
+        const btnSalvar =
+            pegarElemento("btnSalvar");
+
+
+        btnSalvar.disabled = true;
+
+
+        btnSalvar.textContent =
+            editando
+                ? "⏳ Atualizando..."
+                : "⏳ Salvando...";
+
+
+        try {
+
+            console.log(
+                "📤 Enviando cargo:",
+                payload
+            );
+
+
+            const resposta =
+                await fetch(
+                    url,
+                    {
+                        method: metodo,
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                            "Accept":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(payload)
+                    }
+                );
+
+
+            const dados =
+                await resposta
+                    .json()
+                    .catch(() => ({}));
+
+
+            console.log(
+                "📥 Resposta:",
+                resposta.status,
+                dados
+            );
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    dados.mensagem ||
+                    "Erro ao salvar cargo."
+                );
+
+            }
+
+
+            mostrarStatus(
+                editando
+                    ? "✅ Cargo atualizado com sucesso!"
+                    : "✅ Cargo cadastrado com sucesso!",
+                "sucesso"
+            );
+
+
+            resetarFormulario();
+
+
+            /* IMPORTANTE:
+               Busca novamente no banco.
+            */
+
+            await carregarListaCargos();
+
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro ao salvar cargo:",
+                erro
+            );
+
+
+            mostrarStatus(
+                "❌ " +
+                (
+                    erro.message ||
+                    "Falha de comunicação com o servidor."
+                ),
+                "erro"
+            );
+
+
+        } finally {
+
+            btnSalvar.disabled = false;
+
+
+            if (cargoEmEdicaoId === null) {
+
+                btnSalvar.textContent =
+                    "💾 Salvar Cargo";
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EXCLUIR CARGO
+       ===================================================== */
+
+    async function deletarCargo(id) {
+
+        const cargo =
+            listaCargosGlobal.find(
+                function (item) {
+                    return Number(item.id) === Number(id);
+                }
+            );
+
+
+        const nomeCargo =
+            cargo
+                ? (
+                    cargo.nome ||
+                    cargo.nome_interno
+                )
+                : "este cargo";
+
+
+        const confirmar =
+            confirm(
+                "Tem certeza que deseja excluir o cargo \"" +
+                nomeCargo +
+                "\"?"
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        try {
+
+            mostrarStatus(
+                "Excluindo cargo...",
+                "info"
+            );
+
+
+            const resposta =
+                await fetch(
+                    API_URL +
+                    "/api/cargos/" +
+                    id,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            const dados =
+                await resposta
+                    .json()
+                    .catch(() => ({}));
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    dados.mensagem ||
+                    "Erro ao excluir cargo."
+                );
+
+            }
+
+
+            mostrarStatus(
+                "🗑️ Cargo excluído com sucesso!",
+                "sucesso"
+            );
+
+
+            await carregarListaCargos();
+
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro ao excluir cargo:",
+                erro
+            );
+
+
+            mostrarStatus(
+                "❌ " +
+                (
+                    erro.message ||
+                    "Falha de comunicação com o servidor."
+                ),
+                "erro"
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EVENTOS
+       ===================================================== */
+
+    const formCargo =
+        pegarElemento("formCargo");
+
+
+    if (formCargo) {
+
+        formCargo.addEventListener(
+            "submit",
+            salvarCargo
+        );
+
+    }
+
+
+    const btnAtualizar =
+        pegarElemento("btnAtualizarCargos");
+
+
+    if (btnAtualizar) {
+
+        btnAtualizar.addEventListener(
+            "click",
+            function () {
+
+                esconderStatus();
+
+                carregarListaCargos();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       DISPONIBILIZA AS FUNÇÕES GLOBALMENTE
+       Caso outras partes do sistema precisem delas.
+       ===================================================== */
+
+    window.carregarListaCargos =
+        carregarListaCargos;
+
+    window.editarCargo =
+        editarCargo;
+
+    window.deletarCargo =
+        deletarCargo;
+
+    window.salvarCargo =
+        salvarCargo;
+
+
+    /* =====================================================
+       INICIALIZAÇÃO
+       ===================================================== */
+
+    carregarListaCargos();
+
+
+})();
+
+</script>

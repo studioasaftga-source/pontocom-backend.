@@ -2,8 +2,16 @@
 // FRONT-END: Lógica da Tela de Jornada (public/js/pontos.js)
 // ==========================================
 
-// URL fixa para o seu back-end no Render
-const API_URL = "https://pontocom-backend.onrender.com/api";
+// ============================================================
+// CONFIGURAÇÃO DA API (AUTOMÁTICA)
+// ============================================================
+let API_URL = "";
+
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    API_URL = "http://localhost:3000";
+} else {
+    API_URL = "https://pontocom-backend.onrender.com";
+}
 
 // Pegamos o ID do Colaborador salvo no Login
 const funcionarioId = localStorage.getItem('funcionarioId') || localStorage.getItem('funcionario_id') || 1;

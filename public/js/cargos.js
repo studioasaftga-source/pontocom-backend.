@@ -2,150 +2,751 @@
 // PONTOCOM RH - CARGOS
 // =====================================
 
-const API_URL = "https://pontocom-backend.onrender.com"; // Adicionado link oficial
-let listaCargosGlobal = [];
-let cargoEmEdicaoId = null;
+(function () {
 
-// =====================================
-// INICIALIZAÇÃO DA TELA
-// =====================================
-function inicializarTelaCargos() {
-    carregarListaCargos();
-}
+    // ============================================================
+    // CONFIGURAÇÃO AUTOMÁTICA DA API
+    // ============================================================
 
-// 1. BUSCA OS CARGOS CADASTRADOS E MONTA A TABELA ABAIXO
-async function carregarListaCargos() {
-    const tbody = document.getElementById('tabelaCargosBody');
-    if (!tbody) return;
+    const HOST = window.location.hostname;
 
-    try {
-        // Usando a API_URL
-        const resposta = await fetch(`${API_URL}/api/cargos`);
+    let API_URL = "";
 
-        if (resposta.ok) {
-            const cargos = await resposta.json();
-            listaCargosGlobal = Array.isArray(cargos) ? cargos : [];
-            tbody.innerHTML = '';
-
-            if (listaCargosGlobal.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum cargo cadastrado.</td></tr>';
-                return;
-            }
-
-            listaCargosGlobal.forEach(cargo => {
-                const entrada = cargo.hora_entrada ? cargo.hora_entrada.substring(0, 5) : '--:--';
-                const saida = cargo.hora_saida ? cargo.hora_saida.substring(0, 5) : '--:--';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${cargo.nome || cargo.nome_interno}</strong></td>
-                        <td>${cargo.cbo || 'Sem CBO'}</td>
-                        <td>${cargo.carga_horaria ? cargo.carga_horaria + 'h/mês' : '--'}</td>
-                        <td><small>${entrada} às ${saida}</small></td>
-                        <td>
-                            <button class="btn-acao btn-editar" onclick="editarCargo(${cargo.id})">✏️ Editar</button>
-                            <button class="btn-acao btn-excluir" onclick="deletarCargo(${cargo.id})">🗑️ Excluir</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-    } catch (erro) {
-        console.error("Erro ao carregar lista de cargos:", erro);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #f43f5e;">Erro ao carregar os dados.</td></tr>';
+    if (
+        HOST === "localhost" ||
+        HOST === "127.0.0.1"
+    ) {
+        API_URL = "http://localhost:3000";
+    } else {
+        API_URL = "https://pontocom-backend.onrender.com";
     }
-}
 
-// 2. PREENCHE O FORMULÁRIO QUANDO CLICA EM EDITAR
-function editarCargo(id) {
-    const cargo = listaCargosGlobal.find(c => c.id === id);
-    if (!cargo) return;
+    console.log("=====================================");
+    console.log("PONTOCOM RH - CARGOS");
+    console.log("Hostname:", HOST);
+    console.log("API utilizada:", API_URL);
+    console.log("=====================================");
 
-    cargoEmEdicaoId = id;
 
-    const formatarHora = (hora) => hora ? hora.substring(0, 5) : '';
+    // ============================================================
+    // VARIÁVEIS GLOBAIS
+    // ============================================================
 
-    document.getElementById('nomeCargo').value = cargo.nome || cargo.nome_interno || '';
-    document.getElementById('cboCargo').value = cargo.cbo || '';
-    document.getElementById('horaEntrada').value = formatarHora(cargo.hora_entrada);
-    document.getElementById('horaSaidaAlmoco').value = formatarHora(cargo.saida_almoco || cargo.hora_saida_almoco);
-    document.getElementById('horaRetornoAlmoco').value = formatarHora(cargo.retorno_almoco || cargo.hora_retorno_almoco);
-    document.getElementById('horaSaida').value = formatarHora(cargo.hora_saida);
-    document.getElementById('cargaHoraria').value = cargo.carga_horaria || '';
+    window.listaCargosGlobal = [];
+    window.cargoEmEdicaoId = null;
 
-    const btnSalvar = document.getElementById('btnSalvar');
-    btnSalvar.innerHTML = '✏️ Atualizar Cargo';
-    btnSalvar.style.backgroundColor = '#fbbf24';
-    btnSalvar.style.color = '#0b0f19';
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
 
-// 3. SALVA (POST) OU ATUALIZA (PUT) O CARGO
-async function salvarCargo(event) {
-    event.preventDefault();
+    window.inicializarTelaCargos = function () {
 
-    const payload = {
-        nome_interno: document.getElementById('nomeCargo').value,
-        cbo: document.getElementById('cboCargo').value,
-        hora_entrada: document.getElementById('horaEntrada').value,
-        hora_saida_almoco: document.getElementById('horaSaidaAlmoco').value,
-        hora_retorno_almoco: document.getElementById('horaRetornoAlmoco').value,
-        hora_saida: document.getElementById('horaSaida').value,
-        carga_horaria: document.getElementById('cargaHoraria').value
+        console.log("Inicializando tela de cargos...");
+
+        carregarListaCargos();
     };
 
-    // Usando API_URL
-    const url = cargoEmEdicaoId ? `${API_URL}/api/cargos/${cargoEmEdicaoId}` : `${API_URL}/api/cargos`;
-    const method = cargoEmEdicaoId ? 'PUT' : 'POST';
 
-    try {
-        const resposta = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    // ============================================================
+    // CARREGAR CARGOS
+    // ============================================================
 
-        if (resposta.ok) {
-            alert(cargoEmEdicaoId ? "Cargo atualizado com sucesso!" : "Cargo cadastrado com sucesso!");
-            
-            document.getElementById('formCargo').reset();
-            cargoEmEdicaoId = null;
-            
-            const btnSalvar = document.getElementById('btnSalvar');
-            btnSalvar.innerHTML = '💾 Salvar Cargo';
-            btnSalvar.style.backgroundColor = '#38bdf8';
-            btnSalvar.style.color = '#0b0f19';
+    window.carregarListaCargos = async function () {
 
-            carregarListaCargos();
-        } else {
-            const err = await resposta.json().catch(() => ({}));
-            alert("Erro ao salvar: " + (err.erro || err.mensagem || "Falha no servidor"));
-        }
-    } catch (erro) {
-        console.error("Erro ao salvar cargo:", erro);
-        alert("Falha de comunicação com o servidor.");
-    }
-}
+        const tbody = document.getElementById("tabelaCargosBody");
 
-// 4. EXCLUI O CARGO
-async function deletarCargo(id) {
-    if (!confirm("Tem certeza que deseja excluir este cargo?")) return;
-
-    try {
-        // Usando API_URL
-        const resposta = await fetch(`${API_URL}/api/cargos/${id}`, { method: 'DELETE' });
-
-        if (!resposta.ok) {
-            const dados = await resposta.json().catch(() => ({}));
-            alert(`⚠️ Atenção:\n\n${dados.erro || dados.mensagem || "Erro ao excluir cargo."}`);
+        if (!tbody) {
+            console.error(
+                "❌ Elemento #tabelaCargosBody não encontrado."
+            );
             return;
         }
 
-        alert("🗑️ Cargo excluído com sucesso!");
-        carregarListaCargos();
-    } catch (erro) {
-        console.error("Erro ao deletar cargo:", erro);
-        alert("Falha de comunicação com o servidor.");
+        console.log("🔎 Buscando cargos...");
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:25px;
+                    ">
+                    Carregando cargos...
+                </td>
+            </tr>
+        `;
+
+        try {
+
+            const url = `${API_URL}/api/cargos`;
+
+            console.log("➡️ GET:", url);
+
+            const resposta = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                },
+                cache: "no-cache"
+            });
+
+            console.log(
+                "⬅️ Status da API:",
+                resposta.status
+            );
+
+            if (!resposta.ok) {
+
+                const textoErro = await resposta.text();
+
+                console.error(
+                    "❌ API retornou erro:",
+                    textoErro
+                );
+
+                throw new Error(
+                    `Erro HTTP ${resposta.status}`
+                );
+            }
+
+            const dados = await resposta.json();
+
+            console.log(
+                "✅ Cargos recebidos:",
+                dados
+            );
+
+            window.listaCargosGlobal =
+                Array.isArray(dados) ? dados : [];
+
+            tbody.innerHTML = "";
+
+            // ====================================================
+            // NENHUM CARGO
+            // ====================================================
+
+            if (window.listaCargosGlobal.length === 0) {
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5"
+                            style="
+                                text-align:center;
+                                color:#94a3b8;
+                                padding:25px;
+                            ">
+                            Nenhum cargo cadastrado.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+
+            // ====================================================
+            // MONTAR TABELA
+            // ====================================================
+
+            window.listaCargosGlobal.forEach(cargo => {
+
+                const entrada =
+                    cargo.hora_entrada
+                        ? String(cargo.hora_entrada).substring(0, 5)
+                        : "--:--";
+
+                const saidaAlmoco =
+                    cargo.saida_almoco
+                        ? String(cargo.saida_almoco).substring(0, 5)
+                        : "--:--";
+
+                const retornoAlmoco =
+                    cargo.retorno_almoco
+                        ? String(cargo.retorno_almoco).substring(0, 5)
+                        : "--:--";
+
+                const saida =
+                    cargo.hora_saida
+                        ? String(cargo.hora_saida).substring(0, 5)
+                        : "--:--";
+
+                const nome =
+                    cargo.nome ||
+                    cargo.nome_interno ||
+                    "Cargo sem nome";
+
+                const cbo =
+                    cargo.cbo ||
+                    "Sem CBO";
+
+                const carga =
+                    cargo.carga_horaria !== null &&
+                    cargo.carga_horaria !== undefined
+                        ? `${cargo.carga_horaria}h/mês`
+                        : "--";
+
+
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>
+                        <strong>
+                            ${escapeHtml(nome)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(cbo)}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(carga)}
+                    </td>
+
+                    <td>
+                        <small>
+                            ${entrada}
+                            às
+                            ${saida}
+                        </small>
+                    </td>
+
+                    <td>
+
+                        <button
+                            type="button"
+                            class="btn-acao btn-editar"
+                            onclick="editarCargo(${Number(cargo.id)})">
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn-acao btn-excluir"
+                            onclick="deletarCargo(${Number(cargo.id)})">
+                            🗑️ Excluir
+                        </button>
+
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            console.log(
+                `✅ ${window.listaCargosGlobal.length} cargo(s) exibido(s) na tabela.`
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "❌ ERRO AO CARREGAR CARGOS:",
+                erro
+            );
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5"
+                        style="
+                            text-align:center;
+                            color:#f43f5e;
+                            padding:25px;
+                        ">
+
+                        ❌ Erro ao carregar os cargos.
+
+                        <br>
+
+                        <small style="color:#94a3b8;">
+                            Verifique o console do navegador.
+                        </small>
+
+                    </td>
+                </tr>
+            `;
+        }
+    };
+
+
+    // ============================================================
+    // EDITAR CARGO
+    // ============================================================
+
+    window.editarCargo = function (id) {
+
+        const cargo =
+            window.listaCargosGlobal.find(
+                item => Number(item.id) === Number(id)
+            );
+
+        if (!cargo) {
+
+            console.error(
+                "Cargo não encontrado:",
+                id
+            );
+
+            return;
+        }
+
+        window.cargoEmEdicaoId = id;
+
+        console.log(
+            "✏️ Editando cargo:",
+            cargo
+        );
+
+
+        const formatarHora = function (hora) {
+
+            if (!hora) return "";
+
+            return String(hora).substring(0, 5);
+        };
+
+
+        const campoNome =
+            document.getElementById("nomeCargo");
+
+        const campoCbo =
+            document.getElementById("cboCargo");
+
+        const campoEntrada =
+            document.getElementById("horaEntrada");
+
+        const campoSaidaAlmoco =
+            document.getElementById("horaSaidaAlmoco");
+
+        const campoRetornoAlmoco =
+            document.getElementById("horaRetornoAlmoco");
+
+        const campoSaida =
+            document.getElementById("horaSaida");
+
+        const campoCarga =
+            document.getElementById("cargaHoraria");
+
+
+        if (campoNome) {
+            campoNome.value =
+                cargo.nome ||
+                cargo.nome_interno ||
+                "";
+        }
+
+        if (campoCbo) {
+            campoCbo.value =
+                cargo.cbo || "";
+        }
+
+        if (campoEntrada) {
+            campoEntrada.value =
+                formatarHora(cargo.hora_entrada);
+        }
+
+        if (campoSaidaAlmoco) {
+            campoSaidaAlmoco.value =
+                formatarHora(cargo.saida_almoco);
+        }
+
+        if (campoRetornoAlmoco) {
+            campoRetornoAlmoco.value =
+                formatarHora(cargo.retorno_almoco);
+        }
+
+        if (campoSaida) {
+            campoSaida.value =
+                formatarHora(cargo.hora_saida);
+        }
+
+        if (campoCarga) {
+            campoCarga.value =
+                cargo.carga_horaria || "";
+        }
+
+
+        const btnSalvar =
+            document.getElementById("btnSalvar");
+
+        if (btnSalvar) {
+
+            btnSalvar.innerHTML =
+                "✏️ Atualizar Cargo";
+
+            btnSalvar.style.backgroundColor =
+                "#fbbf24";
+
+            btnSalvar.style.color =
+                "#0b0f19";
+        }
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    };
+
+
+    // ============================================================
+    // SALVAR / ATUALIZAR
+    // ============================================================
+
+    window.salvarCargo = async function (event) {
+
+        if (event) {
+            event.preventDefault();
+        }
+
+        const nome =
+            document.getElementById("nomeCargo")?.value?.trim();
+
+        const cbo =
+            document.getElementById("cboCargo")?.value?.trim();
+
+        const horaEntrada =
+            document.getElementById("horaEntrada")?.value;
+
+        const horaSaidaAlmoco =
+            document.getElementById("horaSaidaAlmoco")?.value;
+
+        const horaRetornoAlmoco =
+            document.getElementById("horaRetornoAlmoco")?.value;
+
+        const horaSaida =
+            document.getElementById("horaSaida")?.value;
+
+        const cargaHoraria =
+            document.getElementById("cargaHoraria")?.value;
+
+
+        const payload = {
+
+            nome_interno: nome,
+
+            cbo: cbo,
+
+            hora_entrada:
+                horaEntrada || null,
+
+            hora_saida_almoco:
+                horaSaidaAlmoco || null,
+
+            hora_retorno_almoco:
+                horaRetornoAlmoco || null,
+
+            hora_saida:
+                horaSaida || null,
+
+            carga_horaria:
+                cargaHoraria || null
+        };
+
+
+        console.log(
+            "📤 Dados enviados:",
+            payload
+        );
+
+
+        const id =
+            window.cargoEmEdicaoId;
+
+        const url =
+            id
+                ? `${API_URL}/api/cargos/${id}`
+                : `${API_URL}/api/cargos`;
+
+        const method =
+            id ? "PUT" : "POST";
+
+
+        console.log(
+            `➡️ ${method}:`,
+            url
+        );
+
+
+        try {
+
+            const resposta =
+                await fetch(url, {
+
+                    method: method,
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(payload)
+                });
+
+
+            console.log(
+                "⬅️ Status:",
+                resposta.status
+            );
+
+
+            const texto =
+                await resposta.text();
+
+            let dados = {};
+
+            try {
+                dados =
+                    texto
+                        ? JSON.parse(texto)
+                        : {};
+            } catch {
+                dados = {
+                    mensagem: texto
+                };
+            }
+
+
+            if (!resposta.ok) {
+
+                console.error(
+                    "❌ Erro ao salvar:",
+                    dados
+                );
+
+                alert(
+                    "Erro ao salvar cargo:\n\n" +
+                    (
+                        dados.erro ||
+                        dados.mensagem ||
+                        `Erro HTTP ${resposta.status}`
+                    )
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "✅ Cargo salvo:",
+                dados
+            );
+
+
+            alert(
+                id
+                    ? "Cargo atualizado com sucesso!"
+                    : "Cargo cadastrado com sucesso!"
+            );
+
+
+            const form =
+                document.getElementById("formCargo");
+
+            if (form) {
+                form.reset();
+            }
+
+
+            window.cargoEmEdicaoId =
+                null;
+
+
+            const btnSalvar =
+                document.getElementById("btnSalvar");
+
+            if (btnSalvar) {
+
+                btnSalvar.innerHTML =
+                    "💾 Salvar Cargo";
+
+                btnSalvar.style.backgroundColor =
+                    "#38bdf8";
+
+                btnSalvar.style.color =
+                    "#0b0f19";
+            }
+
+
+            // IMPORTANTE:
+            // Busca novamente no banco depois do POST/PUT
+
+            await carregarListaCargos();
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro de comunicação:",
+                erro
+            );
+
+            alert(
+                "Falha de comunicação com o servidor.\n\n" +
+                erro.message
+            );
+        }
+    };
+
+
+    // ============================================================
+    // EXCLUIR CARGO
+    // ============================================================
+
+    window.deletarCargo = async function (id) {
+
+        if (
+            !confirm(
+                "Tem certeza que deseja excluir este cargo?"
+            )
+        ) {
+            return;
+        }
+
+
+        try {
+
+            const url =
+                `${API_URL}/api/cargos/${id}`;
+
+            console.log(
+                "🗑️ DELETE:",
+                url
+            );
+
+
+            const resposta =
+                await fetch(url, {
+                    method: "DELETE",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                });
+
+
+            const texto =
+                await resposta.text();
+
+            let dados = {};
+
+            try {
+                dados =
+                    texto
+                        ? JSON.parse(texto)
+                        : {};
+            } catch {
+                dados = {
+                    mensagem: texto
+                };
+            }
+
+
+            if (!resposta.ok) {
+
+                console.error(
+                    "Erro ao excluir:",
+                    dados
+                );
+
+                alert(
+                    dados.erro ||
+                    dados.mensagem ||
+                    "Erro ao excluir cargo."
+                );
+
+                return;
+            }
+
+
+            alert(
+                "🗑️ Cargo excluído com sucesso!"
+            );
+
+
+            await carregarListaCargos();
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro ao deletar cargo:",
+                erro
+            );
+
+            alert(
+                "Falha de comunicação com o servidor."
+            );
+        }
+    };
+
+
+    // ============================================================
+    // SEGURANÇA PARA TEXTO
+    // ============================================================
+
+    function escapeHtml(valor) {
+
+        return String(valor ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
-}
+
+
+    // ============================================================
+    // INICIALIZAÇÃO AUTOMÁTICA
+    // ============================================================
+
+    function iniciar() {
+
+        console.log(
+            "🚀 Iniciando módulo de cargos..."
+        );
+
+        const tabela =
+            document.getElementById(
+                "tabelaCargosBody"
+            );
+
+        if (tabela) {
+
+            carregarListaCargos();
+
+        } else {
+
+            console.log(
+                "⏳ Tabela ainda não está no DOM. Aguardando..."
+            );
+
+            setTimeout(
+                iniciar,
+                300
+            );
+        }
+    }
+
+
+    // Executa quando o documento estiver pronto
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciar
+        );
+
+    } else {
+
+        iniciar();
+    }
+
+})();

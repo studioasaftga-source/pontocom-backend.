@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Holerites - PontoCom RH</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -19,227 +17,37 @@
             --texto-secundario: #94a3b8;
             --laranja: #f97316;
             --laranja-hover: #ea580c;
-            --verde: #10b981;
-            --sombra: 0 8px 25px rgba(0, 0, 0, 0.25);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: "Plus Jakarta Sans", sans-serif;
-        }
-
-        html, body {
-            min-height: 100%;
-        }
-
-        body {
-            background: var(--bg-principal);
-            color: var(--texto-principal);
-            overflow-x: hidden;
-        }
-
-        /* Container ajustado para encaixar ao lado do menu lateral gerado pelo sistema */
-        .main-container {
-            margin-left: 240px; 
-            min-height: 100vh;
-            padding: 30px;
-            width: calc(100% - 240px);
-        }
-
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-card);
-            border: 1px solid var(--borda);
-            border-radius: 14px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            box-shadow: var(--sombra);
-        }
-
-        .titulo-area {
-            display: flex;
-            align-items: center;
-            gap: 13px;
-        }
-
-        .titulo-icone {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(249, 115, 22, 0.15);
-            color: var(--laranja);
-            border-radius: 10px;
-            font-size: 21px;
-        }
-
-        .titulo-area h1 {
-            font-size: 21px;
-            font-weight: 800;
-            color: var(--texto-principal);
-        }
-
-        .titulo-area span {
-            display: block;
-            margin-top: 3px;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--texto-secundario);
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--borda);
-            border-radius: 14px;
-            padding: 28px;
-            box-shadow: var(--sombra);
-        }
-
-        .card-header {
-            margin-bottom: 26px;
-        }
-
-        .card-header h2 {
-            font-size: 17px;
-            font-weight: 800;
-            color: var(--texto-principal);
-            margin-bottom: 8px;
-        }
-
-        .card-header p {
-            max-width: 950px;
-            color: var(--texto-secundario);
-            font-size: 13px;
-            line-height: 1.65;
-        }
-
-        .filtros-container {
-            display: grid;
-            grid-template-columns: minmax(170px, 0.8fr) minmax(120px, 0.5fr) minmax(280px, 1.8fr) auto;
-            gap: 18px;
-            align-items: end;
-            padding: 22px;
-            background: var(--bg-card-subtle);
-            border: 1px solid var(--borda);
-            border-radius: 12px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .form-group label {
-            font-size: 11px;
-            font-weight: 800;
-            color: var(--texto-secundario);
-            text-transform: uppercase;
-            letter-spacing: .4px;
-        }
-
-        select, input {
-            width: 100%;
-            height: 44px;
-            padding: 0 13px;
-            border: 1px solid var(--borda);
-            border-radius: 8px;
-            background: var(--bg-principal);
-            color: var(--texto-principal);
-            font-size: 13px;
-            font-weight: 500;
-            outline: none;
-            transition: all .2s ease;
-        }
-
-        select:hover, input:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        select:focus, input:focus {
-            border-color: var(--laranja);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, .15);
-        }
-
-        select option {
-            background: var(--bg-card);
-            color: var(--texto-principal);
-        }
-
-        .btn-gerar {
-            height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 0 22px;
-            border: none;
-            border-radius: 8px;
-            background: var(--laranja);
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 5px 14px rgba(249, 115, 22, .25);
-            transition: all .2s ease;
-        }
-
-        .btn-gerar:hover {
-            background: var(--laranja-hover);
-            transform: translateY(-1px);
-        }
-
-        .info-box {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-top: 20px;
-            padding: 15px 17px;
-            border: 1px solid rgba(249, 115, 22, 0.3);
-            border-radius: 10px;
-            background: rgba(249, 115, 22, 0.05);
-        }
-
-        .info-box p {
-            color: #fdba74;
-            font-size: 12px;
-            line-height: 1.55;
-        }
-
-        @media (max-width: 1100px) {
-            .filtros-container {
-                grid-template-columns: 1fr 1fr;
-            }
-            .funcionario-group, .botao-group {
-                grid-column: 1 / -1;
-            }
-            .btn-gerar {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 800px) {
-            .main-container {
-                margin-left: 0;
-                width: 100%;
-                padding: 20px 15px 40px;
-            }
-            .filtros-container {
-                grid-template-columns: 1fr;
-            }
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
+        body { background: var(--bg-principal); color: var(--texto-principal); overflow-x: hidden; }
+        .main-container { margin-left: 240px; min-height: 100vh; padding: 30px; width: calc(100% - 240px); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; }
+        .titulo-area { display: flex; align-items: center; gap: 13px; }
+        .titulo-icone { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(249, 115, 22, 0.15); color: var(--laranja); border-radius: 10px; font-size: 21px; }
+        .titulo-area h1 { font-size: 21px; font-weight: 800; color: var(--texto-principal); }
+        .titulo-area span { display: block; margin-top: 3px; font-size: 12px; font-weight: 500; color: var(--texto-secundario); }
+        .card { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 28px; }
+        .card-header { margin-bottom: 26px; }
+        .card-header h2 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+        .card-header p { max-width: 950px; color: var(--texto-secundario); font-size: 13px; line-height: 1.65; }
+        .filtros-container { display: grid; grid-template-columns: minmax(170px, 0.8fr) minmax(120px, 0.5fr) minmax(280px, 1.8fr) auto; gap: 18px; align-items: end; padding: 22px; background: var(--bg-card-subtle); border: 1px solid var(--borda); border-radius: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 7px; }
+        .form-group label { font-size: 11px; font-weight: 800; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: .4px; }
+        select, input { width: 100%; height: 44px; padding: 0 13px; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg-principal); color: var(--texto-principal); font-size: 13px; font-weight: 500; outline: none; }
+        select:focus, input:focus { border-color: var(--laranja); }
+        select option { background: var(--bg-card); color: var(--texto-principal); }
+        .btn-gerar { height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 22px; border: none; border-radius: 8px; background: var(--laranja); color: #ffffff; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: all .2s ease; }
+        .btn-gerar:hover { background: var(--laranja-hover); }
+        .btn-gerar:disabled { opacity: 0.6; cursor: not-allowed; }
+        .info-box { display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 15px 17px; border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 10px; background: rgba(249, 115, 22, 0.05); }
+        .info-box p { color: #fdba74; font-size: 12px; line-height: 1.55; }
+        @media (max-width: 1100px) { .filtros-container { grid-template-columns: 1fr 1fr; } .funcionario-group, .botao-group { grid-column: 1 / -1; } .btn-gerar { width: 100%; } }
+        @media (max-width: 800px) { .main-container { margin-left: 0; width: 100%; padding: 20px 15px 40px; } .filtros-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <div class="main-container">
-
         <header class="page-header">
             <div class="titulo-area">
                 <div class="titulo-icone">🧾</div>
@@ -254,14 +62,12 @@
             <section class="card">
                 <div class="card-header">
                     <h2>Emissão de Holerites (2 Vias por Folha A4)</h2>
-                    <p>
-                        Selecione a competência (Mês e Ano) e escolha o funcionário para emitir o holerite individualmente ou selecione <strong>Todos os funcionários</strong> para gerar em lote com corte automático.
-                    </p>
+                    <p>Selecione a competência (Mês e Ano) e escolha o funcionário para emitir o holerite individualmente ou selecione <strong>Todos os funcionários</strong> para gerar em lote com corte automático.</p>
                 </div>
 
                 <div class="filtros-container">
                     <div class="form-group">
-                        <label for="selectMesHolerite">Mês de Competência</label>
+                        <label>Mês de Competência</label>
                         <select id="selectMesHolerite">
                             <option value="1">Janeiro</option>
                             <option value="2">Fevereiro</option>
@@ -279,12 +85,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="selectAnoHolerite">Ano</label>
-                        <input type="number" id="selectAnoHolerite" value="2026" min="2000" max="2100">
+                        <label>Ano</label>
+                        <input type="number" id="selectAnoHolerite" value="2026">
                     </div>
 
                     <div class="form-group funcionario-group">
-                        <label for="selectFuncionarioHolerite">Funcionário</label>
+                        <label>Funcionário</label>
                         <select id="selectFuncionarioHolerite">
                             <option value="">Carregando funcionários...</option>
                         </select>
@@ -299,14 +105,163 @@
 
                 <div class="info-box">
                     <div class="info-icone">ℹ️</div>
-                    <p>
-                        O sistema gera automaticamente duas vias idênticas por folha A4 (Via do Empregado e Via da Empresa) com linha pontilhada para corte, garantindo o padrão exigido para a assinatura física.
-                    </p>
+                    <p>O sistema gera automaticamente duas vias idênticas por folha A4 (Via do Empregado e Via da Empresa) com linha pontilhada para corte, garantindo o padrão exigido para a assinatura física.</p>
                 </div>
             </section>
         </main>
     </div>
 
-    <script src="js/rh.js"></script>
+    <script>
+        // ============================================================
+        // LÓGICA BLINDADA: Usamos uma função para pegar a URL. 
+        // Assim, NUNCA vai dar conflito com o rh.js nem travar sua tela.
+        // ============================================================
+        function obterApiUrl() {
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                return "http://localhost:3000/api";
+            }
+            return "https://pontocom-backend.onrender.com/api";
+        }
+
+        async function carregarFuncionariosParaHolerite() {
+            const select = document.getElementById("selectFuncionarioHolerite");
+            const apiUrl = obterApiUrl(); // Chama a função localmente
+            
+            try {
+                const res = await fetch(`${apiUrl}/holerites/funcionarios`);
+                const dados = await res.json();
+
+                if (res.ok) {
+                    select.innerHTML = '<option value="todos">⭐ Todos os Funcionários (Imprimir em Lote)</option>';
+                    dados.forEach(f => {
+                        select.innerHTML += `<option value="${f.id}">${f.nome} - ${f.cargo || 'Sem cargo'}</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Erro ao carregar lista</option>';
+                }
+            } catch (erro) {
+                console.error("Erro na busca:", erro);
+                select.innerHTML = '<option value="">Erro de conexão</option>';
+            }
+        }
+
+        async function gerarHoleritesComFiltro() {
+            const mes = document.getElementById("selectMesHolerite").value;
+            const ano = document.getElementById("selectAnoHolerite").value;
+            const funcionarioId = document.getElementById("selectFuncionarioHolerite").value;
+            const apiUrl = obterApiUrl(); // Chama a função localmente
+
+            if (!funcionarioId) {
+                alert("Aguarde os funcionários carregarem."); return;
+            }
+
+            const btn = document.querySelector('.btn-gerar');
+            const textoAntigo = btn.innerHTML;
+            btn.innerHTML = "⏳ Gerando...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${apiUrl}/holerites/gerar/${mes}/${ano}/${funcionarioId}`);
+                const dados = await res.json();
+
+                if (res.ok && dados.sucesso) {
+                    imprimirFolhaA4(dados.holerites);
+                } else {
+                    alert(dados.erro || "Erro ao gerar os holerites.");
+                }
+            } catch (erro) {
+                alert("Erro ao conectar com o servidor.");
+            } finally {
+                btn.innerHTML = textoAntigo;
+                btn.disabled = false;
+            }
+        }
+
+        function imprimirFolhaA4(holerites) {
+            let conteudoHTML = `
+                <html>
+                <head>
+                    <title>Holerites PontoCom</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11px; background: #525659; margin:0;}
+                        .folha-a4 { width: 210mm; height: 297mm; background: #fff; margin: 20px auto; padding: 12mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+                        .via { height: 47%; border: 1px solid #000; padding: 12px; box-sizing: border-box; border-radius: 4px; display: flex; flex-direction: column;}
+                        .tesoura { border-bottom: 1px dashed #999; margin: 10px 0; position: relative; }
+                        .tesoura::after { content: "✂"; position: absolute; top: -10px; left: -5px; font-size: 16px; color: #555; background: #fff; padding: 0 5px;}
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; flex-grow: 1; }
+                        th, td { border: 1px solid #000; padding: 4px 6px; text-align: left; }
+                        th { background-color: #f0f0f0; }
+                        .cabecalho { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px;}
+                        .cabecalho h2 { margin: 0; font-size: 18px; text-transform: uppercase;}
+                        .dados-func { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; }
+                        .totais-box { border-top: 2px solid #000; padding-top: 8px; margin-top: auto; }
+                        .linha-totais { display: flex; justify-content: flex-end; gap: 30px; font-weight: bold; margin-bottom: 5px; }
+                        .liquido { font-size: 15px; text-align: right; margin-bottom: 15px; }
+                        .rodape-assinatura { display: flex; justify-content: space-between; align-items: flex-end; }
+                        .linha-ass { border-top: 1px solid #000; width: 45%; text-align: center; padding-top: 4px; }
+                        @media print { body { background: #fff; } .folha-a4 { margin: 0; box-shadow: none; padding: 0; } }
+                    </style>
+                </head>
+                <body>
+            `;
+
+            holerites.forEach(h => {
+                const fMoeda = (v) => v !== null ? Number(v).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}) : '';
+                let linhasTabela = '';
+                h.itens.forEach(item => {
+                    linhasTabela += `<tr>
+                        <td style="text-align: center;">${item.cod}</td>
+                        <td>${item.descricao}</td>
+                        <td style="text-align: center;">${item.referencia}</td>
+                        <td style="text-align: right;">${fMoeda(item.provento)}</td>
+                        <td style="text-align: right;">${fMoeda(item.desconto)}</td>
+                    </tr>`;
+                });
+
+                const desenharVia = (tipoVia) => `
+                    <div class="via">
+                        <div class="cabecalho">
+                            <div>
+                                <h2>${h.empresa}</h2>
+                                <div style="font-size: 13px; margin-top:3px;">Recibo de Pagamento de Salário</div>
+                            </div>
+                            <div style="text-align: right; font-size: 12px;">
+                                <strong>Competência:</strong> ${h.competencia}<br>
+                                <span style="display:inline-block; margin-top:4px; padding:2px 6px; background:#eee; border:1px solid #ccc;">${tipoVia}</span>
+                            </div>
+                        </div>
+                        <div class="dados-func">
+                            <div><strong>Cód:</strong> ${String(h.funcionario.id).padStart(4, '0')} <br><strong>Nome:</strong> ${h.funcionario.nome} </div>
+                            <div style="text-align: right;"><strong>Cargo:</strong> ${h.funcionario.cargo} <br><strong>Admissão:</strong> ${new Date(h.funcionario.admissao).toLocaleDateString('pt-BR')}</div>
+                        </div>
+                        <table>
+                            <thead><tr><th style="width:40px;">Cód.</th><th>Descrição</th><th style="width:60px;">Ref.</th><th style="width:100px;">Vencimentos</th><th style="width:100px;">Descontos</th></tr></thead>
+                            <tbody style="vertical-align: top; height: 120px;">
+                                ${linhasTabela}
+                                <tr><td style="border-bottom:none;"></td><td style="border-bottom:none;"></td><td style="border-bottom:none;"></td><td style="border-bottom:none;"></td><td style="border-bottom:none;"></td></tr>
+                            </tbody>
+                        </table>
+                        <div class="totais-box">
+                            <div class="linha-totais"><div>Total Vencimentos: ${fMoeda(h.totais.proventos)}</div><div>Total Descontos: ${fMoeda(h.totais.descontos)}</div></div>
+                            <div class="linha-totais liquido">Líquido a Receber ➔ ${fMoeda(h.totais.liquido)}</div>
+                            <div class="rodape-assinatura">
+                                <div style="width: 45%; font-size: 9px; text-align: justify;">Declaro ter recebido a importância líquida discriminada neste recibo, quitando os valores correspondentes.<br><br>Data: ____/____/________</div>
+                                <div class="linha-ass">Assinatura do Funcionário</div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                conteudoHTML += `<div class="folha-a4">${desenharVia('Via do Empregado')}<div class="tesoura"></div>${desenharVia('Via da Empresa')}</div>`;
+            });
+
+            conteudoHTML += `<script>window.onload = function() { setTimeout(() => { window.print(); }, 500); }<\/script></body></html>`;
+            const janela = window.open('', '_blank');
+            janela.document.write(conteudoHTML);
+            janela.document.close();
+        }
+
+        // Delay rápido para garantir que o menu SPA injetou o HTML antes de puxar os dados
+        setTimeout(carregarFuncionariosParaHolerite, 300);
+    </script>
 </body>
 </html>

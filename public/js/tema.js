@@ -1,6 +1,15 @@
 // Arquivo: public/js/tema.js
 
-const API_URL = "https://pontocom-backend.onrender.com/api/configuracoes";
+// ============================================================
+// CONFIGURAÇÃO DA API (AUTOMÁTICA)
+// ============================================================
+let API_URL = "";
+
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    API_URL = "http://localhost:3000";
+} else {
+    API_URL = "https://pontocom-backend.onrender.com";
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {

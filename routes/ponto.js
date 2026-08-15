@@ -1,1175 +1,350 @@
 const express = require('express');
 const router = express.Router();
-
 const pool = require('../database');
 
+// ==========================================
+// FUNÇÃO MATEMÁTICA: CALCULAR DISTÂNCIA EM METROS (HAVERSINE)
+// ==========================================
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371e3; // Raio da Terra em metros
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Retorna a distância exata em metros
+}
+
+// ==========================================
+// UTILITÁRIOS
+// ==========================================
 function vazio(valor) {
-
-    return valor === undefined || valor === ""
-        ? null
-        : valor;
-
+    return valor === undefined || valor === "" ? null : valor;
 }
 
 function formatarHora(dataISO) {
-
     if (!dataISO) return "--:--";
-
     const d = new Date(dataISO);
-
     return d.toLocaleTimeString('pt-BR', {
-
         hour: '2-digit',
         minute: '2-digit',
-        timeZone: 'America/Sao_Paulo'
-
+        timeZone: 'America/Cuiaba'
     });
 }
+
 // ==========================================
 // GET /api/ponto
 // CONSULTA GERAL - PAINEL RH
 // ==========================================
-
 router.get("/", async (req,res)=>{
-
-    const funcionarioId =
-        req.query.funcionarioId ||
-        req.query.funcionario_id;
-
+    const funcionarioId = req.query.funcionarioId || req.query.funcionario_id;
 
     try {
-
         let query = `
-
-            SELECT
-
-                p.*,
-
-                f.nome AS funcionario_nome
-
-
+            SELECT p.*, f.nome AS funcionario_nome
             FROM registros_ponto p
-
-
-            LEFT JOIN funcionarios f
-
-                ON f.id = p.funcionario_id
-
-
-
-            WHERE DATE(
-                p.data_hora AT TIME ZONE 'UTC'
-                AT TIME ZONE 'America/Sao_Paulo'
-            )
-            =
-            CURRENT_DATE
-
-
+            LEFT JOIN funcionarios f ON f.id = p.funcionario_id
+            WHERE DATE(p.data_hora AT TIME ZONE 'UTC' AT TIME ZONE 'America/Cuiaba') = CURRENT_DATE
         `;
-
-
+        
         let params = [];
-
-
         if(funcionarioId){
-
-
-            query += `
-                AND p.funcionario_id = $1
-            `;
-
-
+            query += ` AND p.funcionario_id = $1 `;
             params.push(funcionarioId);
-
         }
+        
+        query += ` ORDER BY p.data_hora DESC; `;
 
-
-        query += `
-
-            ORDER BY p.data_hora DESC;
-
-        `;
-
-
-        const resultado =
-            await pool.query(query,params);
-
-
+        const resultado = await pool.query(query,params);
         res.json(resultado.rows);
 
-
     }catch(erro){
-
-
-        console.error(
-            "Erro consulta geral:",
-            erro
-        );
-
-
-        res.status(500).json({
-
-            erro: erro.message
-
-        });
-
-
+        console.error("Erro consulta geral:", erro);
+        res.status(500).json({ erro: erro.message });
     }
-
 });
-
-
 
 // ==========================================
 // MOTOR DE JORNADA
 // GET /api/ponto/hoje
 // ==========================================
-
 async function buscarHojeHandler(req,res){
-
-
-    const idFinal =
-
-        req.params.funcionario_id ||
-
-        req.query.funcionarioId ||
-
-        req.query.funcionario_id;
-
-
+    const idFinal = req.params.funcionario_id || req.query.funcionarioId || req.query.funcionario_id;
 
     if(!idFinal){
-
-
-        return res.status(400).json({
-
-            erro:
-            "Informe o ID do funcionário."
-
-        });
-
-
+        return res.status(400).json({ erro: "Informe o ID do funcionário." });
     }
 
-
-
     try {
-
-
         const query = `
-
-
-            SELECT *
-
-            FROM registros_ponto
-
-
+            SELECT * FROM registros_ponto
             WHERE funcionario_id = $1
-
-
             ORDER BY data_hora ASC;
-
-
-
         `;
 
+        const resultado = await pool.query(query, [idFinal]);
+        const todos = resultado.rows;
 
-
-        const resultado =
-            await pool.query(
-                query,
-                [idFinal]
+        const hoje = todos.filter(r=>{
+            const data = new Date(r.data_hora);
+            const agora = new Date();
+            return (
+                data.getDate() === agora.getDate() &&
+                data.getMonth() === agora.getMonth() &&
+                data.getFullYear() === agora.getFullYear()
             );
-
-
-
-        const todos =
-            resultado.rows;
-
-
-
-        const hoje =
-            todos.filter(r=>{
-
-
-                const data =
-                    new Date(r.data_hora);
-
-
-
-                const agora =
-                    new Date();
-
-
-
-                return (
-
-                    data.getDate()
-                    ===
-                    agora.getDate()
-
-
-                    &&
-
-
-                    data.getMonth()
-                    ===
-                    agora.getMonth()
-
-
-                    &&
-
-
-                    data.getFullYear()
-                    ===
-                    agora.getFullYear()
-
-
-                );
-
-
-            });
-
+        });
 
         let motor = {
-
-
-            entrada:null,
-
-            saida_almoco:null,
-
-            retorno_almoco:null,
-
-            saida:null,
-
-
-            quantidade_batidas:
-                hoje.length,
-
-
-            horas_trabalhadas:
-                "00:00",
-
-
-            horas_restantes:
-                "08:00",
-
-
-            proxima:
-                "ENTRADA"
-
-
+            entrada:null, saida_almoco:null, retorno_almoco:null, saida:null,
+            quantidade_batidas: hoje.length,
+            horas_trabalhadas: "00:00", horas_restantes: "08:00", proxima: "ENTRADA"
         };
-
-
 
         // =====================================
         // DISTRIBUI AS BATIDAS NO MOTOR
         // =====================================
-
-
         hoje.forEach((registro,index)=>{
-
-
-            const hora =
-                formatarHora(
-                    registro.data_hora
-                );
-
-
-
+            const hora = formatarHora(registro.data_hora);
             switch(index){
-
-
-
-                case 0:
-
-                    motor.entrada = hora;
-
-                    motor.proxima =
-                        "SAIDA_ALMOCO";
-
-                    break;
-
-
-
-                case 1:
-
-                    motor.saida_almoco = hora;
-
-                    motor.proxima =
-                        "RETORNO_ALMOCO";
-
-                    break;
-
-
-
-                case 2:
-
-                    motor.retorno_almoco = hora;
-
-                    motor.proxima =
-                        "SAIDA";
-
-                    break;
-
-
-
-                case 3:
-
-                    motor.saida = hora;
-
-                    motor.proxima =
-                        "ENCERRADO";
-
-                    break;
-
-
-
+                case 0: motor.entrada = hora; motor.proxima = "SAIDA_ALMOCO"; break;
+                case 1: motor.saida_almoco = hora; motor.proxima = "RETORNO_ALMOCO"; break;
+                case 2: motor.retorno_almoco = hora; motor.proxima = "SAIDA"; break;
+                case 3: motor.saida = hora; motor.proxima = "ENCERRADO"; break;
             }
-
-
-
         });
-
-
-
-
-
 
         // =====================================
         // CALCULO SIMPLES DE HORAS TRABALHADAS
         // =====================================
-
-
-        if(
-            motor.entrada &&
-            motor.saida
-        ){
-
-
-            const inicio =
-                hoje[0].data_hora;
-
-
-
-            const fim =
-                hoje[3].data_hora;
-
-
-
-            const minutos =
-                Math.floor(
-                    (
-                        new Date(fim)
-                        -
-                        new Date(inicio)
-                    )
-                    /
-                    60000
-                );
-
-
-
-            const h =
-                Math.floor(
-                    minutos / 60
-                );
-
-
-
-            const m =
-                minutos % 60;
-
-
-
-            motor.horas_trabalhadas =
-
-                `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-
-
-
-            motor.horas_restantes =
-                "00:00";
-
-
-
+        if(motor.entrada && motor.saida){
+            const inicio = hoje[0].data_hora;
+            const fim = hoje[3].data_hora;
+            const minutos = Math.floor((new Date(fim) - new Date(inicio)) / 60000);
+            const h = Math.floor(minutos / 60);
+            const m = minutos % 60;
+            motor.horas_trabalhadas = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            motor.horas_restantes = "00:00";
         }
-
-
-
-        else if(
-            motor.entrada
-        ){
-
-
-
-            const inicio =
-                new Date(
-                    hoje[0].data_hora
-                );
-
-
-
-            const agora =
-                new Date();
-
-
-
-            const minutos =
-                Math.floor(
-                    (
-                        agora - inicio
-                    )
-                    /
-                    60000
-                );
-
-
-
-            const h =
-                Math.floor(
-                    minutos / 60
-                );
-
-
-
-            const m =
-                minutos % 60;
-
-
-
-            motor.horas_trabalhadas =
-
-                `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-
-
-
-            const restante =
-                480 - minutos;
-
-
-
+        else if(motor.entrada){
+            const inicio = new Date(hoje[0].data_hora);
+            const agora = new Date();
+            const minutos = Math.floor((agora - inicio) / 60000);
+            const h = Math.floor(minutos / 60);
+            const m = minutos % 60;
+            motor.horas_trabalhadas = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            const restante = 480 - minutos;
+            
             if(restante > 0){
-
-
-                motor.horas_restantes =
-
-                    `${String(
-                        Math.floor(restante / 60)
-                    ).padStart(2,'0')}:${String(
-                        restante % 60
-                    ).padStart(2,'0')}`;
-
-
+                motor.horas_restantes = `${String(Math.floor(restante / 60)).padStart(2,'0')}:${String(restante % 60).padStart(2,'0')}`;
             }else{
-
-
-                motor.horas_restantes =
-                    "00:00";
-
-
+                motor.horas_restantes = "00:00";
             }
-
-
         }
-
-
-
 
         res.json(motor);
 
-
-
     }catch(erro){
-
-
-        console.error(
-            "Erro motor jornada:",
-            erro
-        );
-
-
-
-        res.status(500).json({
-
-            erro:
-                erro.message
-
-        });
-
-
+        console.error("Erro motor jornada:", erro);
+        res.status(500).json({ erro: erro.message });
     }
-
-
 }
 
+router.get("/hoje", buscarHojeHandler);
+router.get("/hoje/:funcionario_id", buscarHojeHandler);
 
-
-router.get(
-    "/hoje",
-    buscarHojeHandler
-);
-
-
-
-router.get(
-    "/hoje/:funcionario_id",
-    buscarHojeHandler
-);
 // ==========================================
 // CONSULTA MENSAL
 // ==========================================
+router.get("/:funcionario_id/:mes/:ano", async(req,res)=>{
+    const { funcionario_id, mes, ano } = req.params;
 
-router.get(
-    "/:funcionario_id/:mes/:ano",
-    async(req,res)=>{
-
-
-        const {
-
-            funcionario_id,
-            mes,
-            ano
-
-        } = req.params;
-
-
-
-        try{
-
-
-            const query = `
-
-
-                SELECT
-
-                    *,
-
-                    data_hora AS data_registro
-
-
-                FROM registros_ponto
-
-
-                WHERE funcionario_id = $1
-
-
-                AND EXTRACT(
-                    MONTH FROM data_hora
-                    AT TIME ZONE 'America/Sao_Paulo'
-                )
-                =
-                $2::numeric
-
-
-
-                AND EXTRACT(
-                    YEAR FROM data_hora
-                    AT TIME ZONE 'America/Sao_Paulo'
-                )
-                =
-                $3::numeric
-
-
-
-                ORDER BY data_hora ASC;
-
-
-
-            `;
-
-
-
-            const resultado =
-
-                await pool.query(
-
-                    query,
-
-                    [
-
-                        funcionario_id,
-
-                        mes,
-
-                        ano
-
-                    ]
-
-                );
-
-
-
-            res.json(resultado.rows);
-
-
-
-        }catch(erro){
-
-
-            console.error(
-
-                "Erro consulta mensal:",
-
-                erro
-
-            );
-
-
-
-            res.status(500).json({
-
-                erro:
-
-                    erro.message
-
-            });
-
-
-
-        }
-
-
+    try{
+        const query = `
+            SELECT *, data_hora AS data_registro
+            FROM registros_ponto
+            WHERE funcionario_id = $1
+            AND EXTRACT(MONTH FROM data_hora AT TIME ZONE 'America/Cuiaba') = $2::numeric
+            AND EXTRACT(YEAR FROM data_hora AT TIME ZONE 'America/Cuiaba') = $3::numeric
+            ORDER BY data_hora ASC;
+        `;
+        const resultado = await pool.query(query, [funcionario_id, mes, ano]);
+        res.json(resultado.rows);
+    }catch(erro){
+        console.error("Erro consulta mensal:", erro);
+        res.status(500).json({ erro: erro.message });
     }
-);
-
-
+});
 
 // ==========================================
 // POST /api/ponto
-// REGISTRO DE PONTO
+// REGISTRO DE PONTO (GPS + TRAVA 15 MINUTOS + MODO DEMO)
 // ==========================================
-
 async function registrarPontoHandler(req,res){
 
-
-
     const {
-
-        funcionario_id,
-
-        funcionarioId,
-
-        tipo,
-
-        latitude,
-
-        longitude,
-
-        foto_url,
-
-        status_validacao
-
-
+        funcionario_id, funcionarioId, tipo,
+        latitude, longitude, foto_url, status_validacao
     } = req.body;
 
-
-
-    const idFinal =
-
-        funcionario_id || funcionarioId;
-
-
-
+    const idFinal = funcionario_id || funcionarioId;
 
     if(!idFinal){
-
-
-        return res.status(400).json({
-
-            erro:
-
-            "ID do funcionário é obrigatório."
-
-        });
-
-
+        return res.status(400).json({ erro: "ID do funcionário é obrigatório." });
     }
 
-
+    // ==================================================
+    // 👑 MODO DE DEMONSTRAÇÃO (MODO DEUS) 👑
+    // Mude o "1" abaixo para o seu ID oficial do sistema
+    // ==================================================
+    const MEU_ID_ADMIN = 1; 
+    const isModoDemo = parseInt(idFinal) === MEU_ID_ADMIN;
 
     try {
-
-
-
-        const funcCheck =
-
-
-            await pool.query(
-
-
-                `
-                SELECT id,nome
-                FROM funcionarios
-                WHERE id=$1
-                `,
-
-
-                [idFinal]
-
-            );
-
-
-
-        if(funcCheck.rows.length===0){
-
-
-            return res.status(404).json({
-
-                erro:
-
-                "Funcionário não encontrado."
-
-            });
-
-
-        }
-
-
-
-
-
-
-        const hoje =
-
-
-            await pool.query(
-
-
-                `
-
-                SELECT *
-
-                FROM registros_ponto
-
-                WHERE funcionario_id=$1
-
-
-                AND DATE(
-
-                    data_hora
-
-                    AT TIME ZONE 'America/Sao_Paulo'
-
-                )
-
-                =
-
-                DATE(
-
-                    NOW()
-
-                    AT TIME ZONE 'America/Sao_Paulo'
-
-                )
-
-
-                ORDER BY data_hora ASC;
-
-
-
-                `,
-
-
-                [idFinal]
-
-            );
-
-
-
-
-
-        let tipoAutomatico = tipo;
-
-
-
-        if(!tipoAutomatico){
-
-
-            switch(hoje.rows.length){
-
-
-                case 0:
-
-                    tipoAutomatico =
-
-                    "ENTRADA";
-
-                    break;
-
-
-
-                case 1:
-
-                    tipoAutomatico =
-
-                    "SAIDA_ALMOCO";
-
-                    break;
-
-
-
-                case 2:
-
-                    tipoAutomatico =
-
-                    "RETORNO_ALMOCO";
-
-                    break;
-
-
-
-                case 3:
-
-                    tipoAutomatico =
-
-                    "SAIDA";
-
-                    break;
-
-
-
-                default:
-
-
-                    return res.status(400).json({
-
-                        erro:
-
-                        "Expediente já encerrado."
-
-                    });
-
-
-
+        // ==================================================
+        // 🚧 TRAVA DE GPS (Ignorada se for Modo Demo) 🚧
+        // ==================================================
+        if (!isModoDemo) {
+            if (!latitude || !longitude) {
+                return res.status(400).json({ 
+                    erro: "Localização GPS obrigatória. Por favor, ative a localização no seu celular!" 
+                });
             }
 
+            const configBd = await pool.query(`
+                SELECT latitude, longitude, raio_tolerancia_metros 
+                FROM configuracoes 
+                WHERE id = 1
+            `);
 
+            if (configBd.rows.length === 0 || !configBd.rows[0].latitude || !configBd.rows[0].longitude) {
+                return res.status(500).json({ 
+                    erro: "As coordenadas da empresa ainda não foram configuradas no Painel do RH." 
+                });
+            }
+
+            const latEmpresa = parseFloat(configBd.rows[0].latitude);
+            const lngEmpresa = parseFloat(configBd.rows[0].longitude);
+            const raioPermitido = parseFloat(configBd.rows[0].raio_tolerancia_metros) || 100; 
+
+            const distanciaMetros = calcularDistancia(latitude, longitude, latEmpresa, lngEmpresa);
+
+            if (distanciaMetros > raioPermitido) {
+                return res.status(403).json({ 
+                    erro: `Fora da área! Você está a ${Math.round(distanciaMetros)} metros da empresa. O máximo permitido é ${raioPermitido} metros.` 
+                });
+            }
         }
+
+        // VERIFICA SE O FUNCIONÁRIO EXISTE
+        const funcCheck = await pool.query(`SELECT id,nome FROM funcionarios WHERE id=$1`, [idFinal]);
+
+        if(funcCheck.rows.length===0){
+            return res.status(404).json({ erro: "Funcionário não encontrado." });
+        }
+
+        // VERIFICA OS PONTOS DE HOJE
+        const hoje = await pool.query(`
+            SELECT * FROM registros_ponto
+            WHERE funcionario_id=$1
+            AND DATE(data_hora AT TIME ZONE 'America/Cuiaba') = DATE(NOW() AT TIME ZONE 'America/Cuiaba')
+            ORDER BY data_hora ASC;
+        `, [idFinal]);
+
+        // ==================================================
+        // ⏱️ TRAVA DE 15 MINUTOS (Ignorada se for Modo Demo) ⏱️
+        // ==================================================
+        if (!isModoDemo && hoje.rows.length > 0) {
+            const ultimaBatida = new Date(hoje.rows[hoje.rows.length - 1].data_hora);
+            const agora = new Date();
+            const diferencaMinutos = (agora - ultimaBatida) / 60000;
+            const TEMPO_TRAVA_MINUTOS = 15; 
+
+            if (diferencaMinutos < TEMPO_TRAVA_MINUTOS) {
+                const faltam = Math.ceil(TEMPO_TRAVA_MINUTOS - diferencaMinutos);
+                return res.status(429).json({ 
+                    erro: `Aguarde mais ${faltam} minuto(s) para registrar um novo ponto.` 
+                });
+            }
+        }
+
+        // DEFINE O TIPO DA BATIDA AUTOMATICAMENTE
+        let tipoAutomatico = tipo;
+
+        if(!tipoAutomatico){
+            switch(hoje.rows.length){
+                case 0: tipoAutomatico = "ENTRADA"; break;
+                case 1: tipoAutomatico = "SAIDA_ALMOCO"; break;
+                case 2: tipoAutomatico = "RETORNO_ALMOCO"; break;
+                case 3: tipoAutomatico = "SAIDA"; break;
+                default:
+                    return res.status(400).json({ erro: "Expediente já encerrado." });
+            }
+        }
+
         // ==========================================
-// INSERÇÃO DO REGISTRO
-// ==========================================
-
-
-        const query = `
-
+        // INSERÇÃO DO REGISTRO NO BANCO
+        // ==========================================
+        const queryInsert = `
             INSERT INTO registros_ponto
-            (
-                funcionario_id,
-                data_hora,
-                coordenadas,
-                tipo,
-                status_validacao,
-                origem,
-                observacao
-            )
-
-            VALUES
-
-            (
-                $1,
-                NOW(),
-                $2,
-                $3,
-                $4,
-                $5,
-                $6
-            )
-
+            (funcionario_id, data_hora, coordenadas, tipo, status_validacao, origem, observacao)
+            VALUES ($1, NOW(), $2, $3, $4, $5, $6)
             RETURNING *;
-
         `;
 
-
-
-        const coordenadas =
-
-            latitude && longitude
-
-            ?
-
-            `${latitude},${longitude}`
-
-            :
-
-            null;
-
-
-
-
-        const valores=[
-
-
+        const coordenadas = latitude && longitude ? `${latitude},${longitude}` : null;
+        
+        const valores = [
             idFinal,
-
-
             coordenadas,
-
-
             tipoAutomatico,
-
-
-            vazio(status_validacao)
-
-            ||
-
-            "PENDENTE",
-
-
+            vazio(status_validacao) || "PENDENTE",
             "APP",
-
-
             "Registro realizado pelo aplicativo"
-
-
         ];
 
-
-
-
-
-        const resultado =
-
-
-            await pool.query(
-
-                query,
-
-                valores
-
-            );
-
-
-
-
-
-        console.log(
-
-            "ENTROU NO PONTO.JS NOVO"
-
-        );
-
-
+        const resultado = await pool.query(queryInsert, valores);
 
         res.status(201).json({
-
-
-            sucesso:true,
-
-
-            mensagem:
-
-            "Ponto registrado com sucesso!",
-
-
-            registro:
-
-            resultado.rows[0]
-
-
+            sucesso: true,
+            mensagem: "Ponto registrado com sucesso!",
+            registro: resultado.rows[0]
         });
-
-
-
-
 
     }catch(erro){
-
-
-
-        console.error(
-
-            "Erro registrar ponto:",
-
-            erro
-
-        );
-
-
-
-        res.status(500).json({
-
-            erro:
-
-            erro.message
-
-        });
-
-
-
+        console.error("Erro registrar ponto:", erro);
+        res.status(500).json({ erro: erro.message });
     }
-
-
 }
 
-
-
-router.post(
-
-    "/",
-
-    registrarPontoHandler
-
-);
-
-
-
-router.post(
-
-    "/registrar",
-
-    registrarPontoHandler
-
-);
-
-
+router.post("/", registrarPontoHandler);
+router.post("/registrar", registrarPontoHandler);
 
 // ==========================================
-// RESET DE TESTES
+// RESET DE TESTES (ROTA DE APAGAR O PONTO)
 // ==========================================
-
-
-router.delete(
-
-    "/reset-hoje",
-
-    async(req,res)=>{
-
-
-        const idFinal =
-
-
-            req.query.funcionarioId ||
-
-
-            req.query.funcionario_id;
-
-
-
-
-        if(!idFinal){
-
-
-            return res.status(400).json({
-
-                erro:
-
-                "ID do funcionário não informado."
-
-            });
-
-
-        }
-
-
-
-
-
-        try{
-
-
-            await pool.query(
-
-
-                `
-
-                DELETE FROM registros_ponto
-
-
-                WHERE funcionario_id=$1
-
-
-                AND DATE(
-
-
-                    data_hora
-
-                    AT TIME ZONE 'America/Sao_Paulo'
-
-
-                )
-
-                =
-
-
-                DATE(
-
-
-                    NOW()
-
-                    AT TIME ZONE 'America/Sao_Paulo'
-
-
-                );
-
-
-
-                `,
-
-
-                [idFinal]
-
-
-            );
-
-
-
-
-
-
-            res.json({
-
-
-                sucesso:true,
-
-
-                mensagem:
-
-                "Batidas de hoje apagadas."
-
-
-            });
-
-
-
-
-
-        }catch(erro){
-
-
-
-            console.error(
-
-                "Erro reset:",
-
-                erro
-
-            );
-
-
-
-            res.status(500).json({
-
-
-                erro:
-
-                erro.message
-
-
-            });
-
-
-
-        }
-
-
+router.delete("/reset-hoje", async(req,res)=>{
+    const idFinal = req.query.funcionarioId || req.query.funcionario_id;
+
+    if(!idFinal){
+        return res.status(400).json({ erro: "ID do funcionário não informado." });
     }
 
-);
+    try{
+        await pool.query(`
+            DELETE FROM registros_ponto
+            WHERE funcionario_id=$1
+            AND DATE(data_hora AT TIME ZONE 'America/Cuiaba') = DATE(NOW() AT TIME ZONE 'America/Cuiaba');
+        `, [idFinal]);
 
+        res.json({ sucesso:true, mensagem: "Batidas de hoje apagadas." });
 
-
-
+    }catch(erro){
+        console.error("Erro reset:", erro);
+        res.status(500).json({ erro: erro.message });
+    }
+});
 
 module.exports = router;
