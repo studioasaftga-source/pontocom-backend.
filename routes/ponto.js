@@ -250,14 +250,21 @@ async function registrarPontoHandler(req, res) {
             }
         }
 
-        // INSERÇÃO DO REGISTRO
+        // INSERÇÃO DO REGISTRO (CORRIGIDO PARA 5 PARÂMETROS)
         const queryInsert = `
-            INSERT INTO registros_ponto (funcionario_id, data_hora, coordenadas, tipo, status_validacao, origem, observacao)
-            VALUES ($1, NOW(), $2, $3, $4, $5, $6)
+            INSERT INTO registros_ponto (funcionario_id, data_hora, coordenadas, tipo, status_validacao, origem)
+            VALUES ($1, NOW(), $2, $3, $4, $5)
             RETURNING *;
         `;
         const coordenadas = latitude && longitude ? `${latitude},${longitude}` : null;
-        const valores = [idFinal, coordenadas, tipoAutomatico, vazio(status_validacao) || "APROVADO", "Registro realizado pelo aplicativo"];
+        
+        const valores = [
+            idFinal, 
+            coordenadas, 
+            tipoAutomatico, 
+            vazio(status_validacao) || "APROVADO", 
+            "APP"
+        ];
         
         const resultado = await pool.query(queryInsert, valores);
         const registro = resultado.rows[0];
