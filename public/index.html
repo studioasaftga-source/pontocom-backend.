@@ -1,28 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PontoCom RH - Dashboard</title>
+
     <link rel="stylesheet" href="css/tema.css">
     <link rel="stylesheet" href="css/estilo.css">
-    
-    <!-- FAVICONS E ÍCONES DAS ABAS -->
-    <link rel="shortcut icon" href="/imagens/favicon.ico" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="96x96" href="/imagens/favicon-96x96.png">
-    <link rel="icon" type="image/svg+xml" href="/imagens/favicon.svg">
 
-    <!-- CONFIGURAÇÕES PWA (Manifest e Cores) -->
+    <link rel="shortcut icon" href="/imagens/favicon.ico" type="image/x-icon">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0056b3">
 
-    <!-- Suporte PWA para Android e iPhone (iOS) -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EspelhoPonto">
-    <link rel="apple-touch-icon" href="/imagens/apple-touch-icon.png">
+    <style>
+        .welcome-banner {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .welcome-banner h2 {
+            margin: 0 0 5px 0;
+            color: #1e293b;
+            font-size: 1.4rem;
+        }
+
+        .welcome-banner p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .action-btn-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #334155;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            border-color: #0056b3;
+            color: #0056b3;
+        }
+
+        .action-icon {
+            font-size: 22px;
+        }
+
+        .action-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .stats-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card-mini {
+            background: #ffffff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #0f172a;
+        }
+
+        .stat-info p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .stat-icon-box {
+            font-size: 20px;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .ranking-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .ranking-title {
+            font-size: 0.95rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ranking-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-ajustar {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .btn-ajustar:hover {
+            background-color: #2563eb;
+        }
+    </style>
 </head>
 
 <body>
@@ -33,253 +165,1308 @@
 
     <div class="container">
 
-        <!-- MENU FIXO -->
         <div class="menu">
-            <a href="#" class="ativo" onclick="abrirDashboard(this)">🏠 Dashboard</a>
-            <a href="#" onclick="carregarPagina('pages/funcionarios.html', this)">👥 Funcionários</a>
-            <a href="#" onclick="carregarPagina('pages/controle_ponto.html', this)">🛡️ Controle de Ponto (RH)</a>
-            <a href="#" onclick="carregarPagina('pages/cargos.html', this)">💼 Cargos</a>
-            <a href="#" onclick="carregarPagina('pages/empresa.html', this)">🏢 Empresa</a>
-            <a href="#" onclick="carregarPagina('pages/pontos.html', this)">🕒 Espelho de Ponto</a>
-            <a href="#" onclick="carregarPagina('pages/rh.html', this)">📅 Fechamento de Ponto</a>
-            <a href="#" onclick="carregarPagina('pages/folha.html', this)">💰 Folha de Pagamento</a>
-            <a href="#" onclick="carregarPagina('pages/holerites.html', this)">📄 Holerites</a>
-            <a href="#" onclick="carregarPagina('pages/gestao_vales.html', this)">💸 Gestão de Vales</a>
-            <a href="#" onclick="carregarPagina('pages/relatorios.html', this)">📊 Relatórios</a>
-            <a href="#" onclick="carregarPagina('pages/configuracoes.html', this)">⚙ Configurações</a>
+
+            <a href="#"
+               class="ativo"
+               onclick="abrirDashboard(this)">
+                🏠 Dashboard
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/funcionarios.html', this)">
+                👥 Funcionários
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/controle_ponto.html', this)">
+                🛡️ Controle de Ponto (RH)
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/cargos.html', this)">
+                💼 Cargos
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/empresa.html', this)">
+                🏢 Empresa
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/pontos.html', this)">
+                🕒 Espelho de Ponto
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/rh.html', this)">
+                📅 Fechamento de Ponto
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/folha.html', this)">
+                💰 Folha de Pagamento
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/holerites.html', this)">
+                📄 Holerites
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/gestao_vales.html', this)">
+                💸 Gestão de Vales
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/relatorios.html', this)">
+                📊 Relatórios
+            </a>
+
+            <a href="#"
+               onclick="carregarPagina('pages/configuracoes.html', this)">
+                ⚙ Configurações
+            </a>
+
         </div>
 
-        <!-- CONTEÚDO PRINCIPAL -->
+
         <div class="conteudo">
 
-            <div class="titulo-pagina">
-                <h2>Dashboard</h2>
+            <div class="welcome-banner">
+
+                <h2>
+                    Olá, Administrador 👋
+                </h2>
+
+                <p>
+                    Bem-vindo ao painel de gestão central do PontoCom RH.
+                </p>
+
             </div>
 
-            <div class="card">
-                <h2>Olá, Administrador 👋</h2>
-                <p>Bem-vindo ao painel de gestão do PontoCom RH.</p>
+
+            <div class="quick-actions-grid">
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/funcionarios.html',
+                       document.querySelector('.menu a:nth-child(2)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        👥
+                    </span>
+
+                    <span class="action-label">
+                        Funcionários
+                    </span>
+
+                </a>
+
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/pontos.html',
+                       document.querySelector('.menu a:nth-child(6)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        🕒
+                    </span>
+
+                    <span class="action-label">
+                        Espelho
+                    </span>
+
+                </a>
+
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/controle_ponto.html',
+                       document.querySelector('.menu a:nth-child(3)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        🛡️
+                    </span>
+
+                    <span class="action-label">
+                        Ajustes
+                    </span>
+
+                </a>
+
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/holerites.html',
+                       document.querySelector('.menu a:nth-child(9)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        📄
+                    </span>
+
+                    <span class="action-label">
+                        Holerites
+                    </span>
+
+                </a>
+
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/gestao_vales.html',
+                       document.querySelector('.menu a:nth-child(10)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        💸
+                    </span>
+
+                    <span class="action-label">
+                        Vales
+                    </span>
+
+                </a>
+
+
+                <a href="#"
+                   onclick="carregarPagina(
+                       'pages/rh.html',
+                       document.querySelector('.menu a:nth-child(7)')
+                   )"
+                   class="action-btn-card">
+
+                    <span class="action-icon">
+                        📅
+                    </span>
+
+                    <span class="action-label">
+                        Fechamento
+                    </span>
+
+                </a>
+
             </div>
 
-            <div class="form-grid">
-                <div class="card">
-                    <h2>👥</h2>
-                    <h3 id="totalFuncionarios">0</h3>
-                    <p>Funcionários ativos</p>
+
+            <div class="stats-mini-grid">
+
+                <div class="stat-card-mini">
+
+                    <div class="stat-info">
+
+                        <h3 id="totalFuncionarios">
+                            0
+                        </h3>
+
+                        <p>
+                            Funcionários
+                        </p>
+
+                    </div>
+
+                    <div class="stat-icon-box">
+                        👥
+                    </div>
+
                 </div>
-                <div class="card">
-                    <h2>🕒</h2>
-                    <h3 id="totalPontos">0</h3>
-                    <p>Batidas hoje</p>
+
+
+                <div class="stat-card-mini">
+
+                    <div class="stat-info">
+
+                        <h3 id="totalPontos">
+                            0
+                        </h3>
+
+                        <p>
+                            Batidas Hoje
+                        </p>
+
+                    </div>
+
+                    <div class="stat-icon-box">
+                        🕒
+                    </div>
+
                 </div>
-                <div class="card">
-                    <h2>📅</h2>
-                    <h3 id="totalFechamentos">0</h3>
-                    <p>Fechamentos</p>
+
+
+                <div class="stat-card-mini">
+
+                    <div class="stat-info">
+
+                        <h3 id="totalFechamentos">
+                            0
+                        </h3>
+
+                        <p>
+                            Fechamentos
+                        </p>
+
+                    </div>
+
+                    <div class="stat-icon-box">
+                        📅
+                    </div>
+
                 </div>
-                <div class="card">
-                    <h2>⚠</h2>
-                    <h3 id="totalAlertas">0</h3>
-                    <p>Funcionários sem ponto</p>
+
+
+                <div class="stat-card-mini">
+
+                    <div class="stat-info">
+
+                        <h3 id="totalAlertas">
+                            0
+                        </h3>
+
+                        <p>
+                            Sem Ponto
+                        </p>
+
+                    </div>
+
+                    <div class="stat-icon-box">
+                        ⚠
+                    </div>
+
                 </div>
+
             </div>
 
-            <!-- ÚLTIMAS BATIDAS -->
-            <div class="card">
-                <h2>🕒 Últimas batidas</h2>
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(3, 1fr);
+                gap:15px;
+                margin-bottom:25px;
+            ">
+
+                <div class="ranking-card">
+
+                    <h2
+                        class="ranking-title"
+                        style="color:#15803d;"
+                    >
+                        ⭐ Pontuais Hoje
+                        (<span id="dataHojeLabel">--/--</span>)
+                    </h2>
+
+                    <ul
+                        id="listaPontuaisHoje"
+                        class="ranking-list"
+                    ></ul>
+
+                </div>
+
+
+                <div class="ranking-card">
+
+                    <h2
+                        class="ranking-title"
+                        style="color:#b91c1c;"
+                    >
+                        ⚠️ Atrasados Hoje
+                        (<span id="dataHojeLabel2">--/--</span>)
+                    </h2>
+
+                    <ul
+                        id="listaAtrasadosHoje"
+                        class="ranking-list"
+                    ></ul>
+
+                </div>
+
+
+                <div
+                    class="ranking-card"
+                    style="border-left:4px solid #f59e0b;"
+                >
+
+                    <h2
+                        class="ranking-title"
+                        style="color:#d97706;"
+                    >
+                        🚨 Alerta: Risco de Vale (Mês)
+                    </h2>
+
+                    <ul
+                        id="listaAlertaRisco"
+                        class="ranking-list"
+                    ></ul>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="card"
+                style="margin-bottom:20px;"
+            >
+
+                <h2
+                    style="
+                        font-size:1.1rem;
+                        margin-top:0;
+                        color:#1e293b;
+                    "
+                >
+                    🕒 Espelho Diário de Hoje
+                    (Batidas por Funcionário)
+                </h2>
+
+
                 <table class="tabela">
+
                     <thead>
+
                         <tr>
-                            <th>Funcionário</th>
-                            <th>Tipo</th>
-                            <th>Horário</th>
-                            <th>Status</th>
+
+                            <th>
+                                Funcionário
+                            </th>
+
+                            <th>
+                                Entrada (1)
+                            </th>
+
+                            <th>
+                                Saída Almoço (2)
+                            </th>
+
+                            <th>
+                                Volta Almoço (3)
+                            </th>
+
+                            <th>
+                                Saída (4)
+                            </th>
+
+                            <th>
+                                Ações
+                            </th>
+
                         </tr>
+
                     </thead>
-                    <tbody id="listaPontos">
-                    </tbody>
+
+
+                    <tbody id="listaResumoHoje"></tbody>
+
                 </table>
+
             </div>
 
-            <!-- FUNCIONÁRIOS SEM BATIDA -->
+
             <div class="card">
-                <h2>⚠ Funcionários sem batida hoje</h2>
+
+                <h2
+                    style="
+                        font-size:1.1rem;
+                        margin-top:0;
+                        color:#1e293b;
+                    "
+                >
+                    ⚠ Funcionários sem batida hoje
+                </h2>
+
+
                 <table class="tabela">
+
                     <thead>
+
                         <tr>
-                            <th>Nome</th>
-                            <th>Cargo</th>
+
+                            <th>
+                                Nome
+                            </th>
+
+                            <th>
+                                Cargo
+                            </th>
+
                         </tr>
+
                     </thead>
-                    <tbody id="listaSemBatida">
-                    </tbody>
+
+
+                    <tbody id="listaSemBatida"></tbody>
+
                 </table>
+
             </div>
 
-        </div> <!-- fecha conteudo -->
-    </div> <!-- fecha container -->
+        </div>
 
-    <!-- ========================================== -->
-    <!-- SCRIPTS GLOBAIS DO SISTEMA                 -->
-    <!-- ========================================== -->
-    
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT DOS MÓDULOS                                    -->
+    <!-- ========================================================= -->
+
     <script src="js/funcionarios.js"></script>
+
     <script src="js/cargos.js"></script>
+
     <script src="js/pontos.js"></script>
+
     <script src="js/controle_ponto.js"></script>
+
     <script src="js/rh.js"></script>
+
     <script src="js/empresa.js"></script>
 
-    <!-- 2. Motor de navegação (SPA) e Dashboard -->
-    <script>
-        let intervalDashboard = null;
-        const htmlDashboardOriginal = document.querySelector('.conteudo').innerHTML;
+    <script src="js/espelho.js"></script>
 
-        async function carregarPagina(url, elementoLink) {
+
+    <script>
+
+        let intervalDashboard = null;
+
+
+        const htmlDashboardOriginal =
+            document.querySelector('.conteudo').innerHTML;
+
+
+        // =========================================================
+        // CARREGAR PÁGINA
+        // =========================================================
+
+        async function carregarPagina(
+            url,
+            elementoLink
+        ) {
+
+            // Para atualização automática do dashboard
             if (intervalDashboard) {
-                clearInterval(intervalDashboard);
+
+                clearInterval(
+                    intervalDashboard
+                );
+
                 intervalDashboard = null;
             }
 
-            atualizarMenuAtivo(elementoLink);
+
+            atualizarMenuAtivo(
+                elementoLink
+            );
+
 
             try {
-                const resposta = await fetch(url);
-                if (!resposta.ok) throw new Error("Página não encontrada");
-                
-                const html = await resposta.text();
-                const containerConteudo = document.querySelector('.conteudo');
 
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const novoConteudo = doc.querySelector('.conteudo');
+                console.log(
+                    "📄 Carregando página:",
+                    url
+                );
 
-                if (novoConteudo) {
-                    containerConteudo.innerHTML = novoConteudo.innerHTML;
-                } else {
-                    containerConteudo.innerHTML = html;
+
+                const resposta =
+                    await fetch(url, {
+                        cache: "no-store"
+                    });
+
+
+                if (!resposta.ok) {
+
+                    throw new Error(
+                        `Erro HTTP ${resposta.status}`
+                    );
+
                 }
 
-                // Executar scripts injetados
-                const scripts = containerConteudo.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
 
-                // ===== INICIA AS FUNÇÕES DA TELA CARREGADA =====
-                if (url.includes('cargos.html')) {
-                    if (typeof inicializarTelaCargos === 'function') inicializarTelaCargos();
+                const html =
+                    await resposta.text();
+
+
+                const container =
+                    document.querySelector(
+                        '.conteudo'
+                    );
+
+
+                if (!container) {
+
+                    throw new Error(
+                        "Container .conteudo não encontrado."
+                    );
+
                 }
-                if (url.includes('controle_ponto.html')) {
-                    if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
-                    if (typeof carregarFuncionariosSelect === 'function') carregarFuncionariosSelect();
-                }
-                if (url.includes('pontos.html')) {
-                    if (typeof inicializarTelaPonto === 'function') inicializarTelaPonto();
-                }
-                if (url.includes('rh.html')) {
-                    const hoje = new Date();
-                    const selectMes = document.getElementById("selectMes");
-                    const selectAno = document.getElementById("selectAno");
-                    if(selectMes) selectMes.value = hoje.getMonth() + 1;
-                    if(selectAno) selectAno.value = hoje.getFullYear();
-                }
-                if (url.includes('gestao_vales.html')) {
-                    if (typeof carregarSolicitacoesPendentes === 'function') carregarSolicitacoesPendentes();
-                }
-                if (url.includes('empresa.html')) {
-                    if (typeof inicializarTelaEmpresa === 'function') inicializarTelaEmpresa();
-                }
+
+
+                const doc =
+                    new DOMParser().parseFromString(
+                        html,
+                        'text/html'
+                    );
+
+
+                const novoConteudo =
+                    doc.querySelector(
+                        '.conteudo'
+                    );
+
+
+                // =================================================
+                // INSERE O HTML
+                // =================================================
+
+                container.innerHTML =
+                    novoConteudo
+                        ? novoConteudo.innerHTML
+                        : html;
+
+
+                // =================================================
+                // IMPORTANTE
+                //
+                // Scripts colocados dentro de innerHTML
+                // NÃO são executados automaticamente pelo
+                // navegador.
+                //
+                // Portanto, precisamos recriá-los.
+                // =================================================
+
+                const scripts =
+                    container.querySelectorAll(
+                        'script'
+                    );
+
+
+                scripts.forEach(
+                    scriptOriginal => {
+
+                        const novoScript =
+                            document.createElement(
+                                'script'
+                            );
+
+
+                        // Copia atributos
+                        Array.from(
+                            scriptOriginal.attributes
+                        ).forEach(
+                            atributo => {
+
+                                novoScript.setAttribute(
+                                    atributo.name,
+                                    atributo.value
+                                );
+
+                            }
+                        );
+
+
+                        // Copia o código JavaScript
+                        novoScript.textContent =
+                            scriptOriginal.textContent;
+
+
+                        // Substitui o script antigo
+                        scriptOriginal.parentNode.replaceChild(
+                            novoScript,
+                            scriptOriginal
+                        );
+
+                    }
+                );
+
+
+                console.log(
+                    "✅ Página carregada:",
+                    url
+                );
+
 
             } catch (erro) {
-                console.error("Erro ao carregar a página:", erro);
-                document.querySelector('.conteudo').innerHTML = `
-                    <div class="card">
-                        <h2>⚠️ Página em construção</h2>
-                        <p>Não foi possível carregar o arquivo: <strong>${url}</strong></p>
-                    </div>
-                `;
+
+                console.error(
+                    "❌ Erro ao carregar página:",
+                    erro
+                );
+
+
+                const container =
+                    document.querySelector(
+                        '.conteudo'
+                    );
+
+
+                if (container) {
+
+                    container.innerHTML = `
+
+                        <div
+                            class="card"
+                            style="
+                                padding:30px;
+                                text-align:center;
+                                color:#f43f5e;
+                            "
+                        >
+
+                            ❌ Não foi possível carregar esta página.
+
+                            <br><br>
+
+                            <small
+                                style="
+                                    color:#64748b;
+                                "
+                            >
+                                ${erro.message}
+                            </small>
+
+                        </div>
+
+                    `;
+
+                }
+
             }
+
         }
 
-        function abrirDashboard(elementoLink) {
-            atualizarMenuAtivo(elementoLink);
-            document.querySelector('.conteudo').innerHTML = htmlDashboardOriginal;
+
+        // =========================================================
+        // ABRIR DASHBOARD
+        // =========================================================
+
+        function abrirDashboard(
+            elementoLink
+        ) {
+
+            atualizarMenuAtivo(
+                elementoLink
+            );
+
+
+            document.querySelector(
+                '.conteudo'
+            ).innerHTML =
+                htmlDashboardOriginal;
+
+
             carregarDashboard();
+
+
             if (!intervalDashboard) {
-                intervalDashboard = setInterval(carregarDashboard, 10000);
+
+                intervalDashboard =
+                    setInterval(
+                        carregarDashboard,
+                        10000
+                    );
+
             }
+
         }
 
-        function atualizarMenuAtivo(elementoLink) {
-            if (!elementoLink) return;
-            const links = document.querySelectorAll('.menu a');
-            links.forEach(link => link.classList.remove('ativo'));
-            elementoLink.classList.add('ativo');
+
+        // =========================================================
+        // ATUALIZAR MENU
+        // =========================================================
+
+        function atualizarMenuAtivo(
+            elementoLink
+        ) {
+
+            if (!elementoLink) {
+                return;
+            }
+
+
+            document
+                .querySelectorAll(
+                    '.menu a'
+                )
+                .forEach(
+                    link => {
+
+                        link.classList.remove(
+                            'ativo'
+                        );
+
+                    }
+                );
+
+
+            elementoLink.classList.add(
+                'ativo'
+            );
+
         }
 
-        async function carregarDashboard(){
+
+        // =========================================================
+        // CARREGAR DASHBOARD
+        // =========================================================
+
+        async function carregarDashboard() {
+
             try {
-                const resposta = await fetch("/api/rh/dashboard");
-                const dados = await resposta.json();
 
-                const totalFuncionarios = document.getElementById("totalFuncionarios");
-                if(totalFuncionarios) totalFuncionarios.innerText = dados.funcionarios || 0;
+                const resposta =
+                    await fetch(
+                        "/api/rh/dashboard",
+                        {
+                            cache: "no-store"
+                        }
+                    );
 
-                const totalPontos = document.getElementById("totalPontos");
-                if(totalPontos) totalPontos.innerText = dados.batidasHoje || 0;
 
-                const totalFechamentos = document.getElementById("totalFechamentos");
-                if(totalFechamentos) totalFechamentos.innerText = dados.fechamentos || 0;
+                const dados =
+                    await resposta.json();
 
-                const totalAlertas = document.getElementById("totalAlertas");
-                if(totalAlertas) totalAlertas.innerText = dados.semBatidaHoje?.length || 0;
 
-                const tabelaPontos = document.getElementById("listaPontos");
-                if(tabelaPontos){
-                    tabelaPontos.innerHTML = "";
-                    if(dados.ultimasBatidas && dados.ultimasBatidas.length){
-                        dados.ultimasBatidas.forEach(p => {
-                            tabelaPontos.innerHTML += `
-                                <tr>
-                                    <td>${p.nome || ""}</td>
-                                    <td>${p.tipo_registro || ""}</td>
-                                    <td>${p.hora_entrada || "--"}</td>
-                                    <td><span class="status status-ativo">${p.status_validacao || "REGISTRADO"}</span></td>
-                                </tr>
-                            `;
-                        });
-                    } else {
-                        tabelaPontos.innerHTML = `<tr><td colspan="4">Nenhuma batida encontrada</td></tr>`;
-                    }
+                const totalFuncionarios =
+                    document.getElementById(
+                        "totalFuncionarios"
+                    );
+
+                if (totalFuncionarios) {
+
+                    totalFuncionarios.innerText =
+                        dados.funcionarios || 0;
+
                 }
 
-                const tabelaSemBatida = document.getElementById("listaSemBatida");
-                if(tabelaSemBatida){
-                    tabelaSemBatida.innerHTML = "";
-                    if(dados.semBatidaHoje && dados.semBatidaHoje.length){
-                        dados.semBatidaHoje.forEach(f => {
-                            tabelaSemBatida.innerHTML += `
-                                <tr>
-                                    <td>${f.nome}</td>
-                                    <td>${f.cargo || "Sem cargo"}</td>
-                                </tr>
-                            `;
-                        });
-                    } else {
-                        tabelaSemBatida.innerHTML = `<tr><td colspan="2">Todos registraram ponto</td></tr>`;
-                    }
+
+                const totalPontos =
+                    document.getElementById(
+                        "totalPontos"
+                    );
+
+                if (totalPontos) {
+
+                    totalPontos.innerText =
+                        dados.batidasHoje || 0;
+
                 }
-            } catch(erro){
-                console.error("Erro dashboard:", erro);
+
+
+                const totalFechamentos =
+                    document.getElementById(
+                        "totalFechamentos"
+                    );
+
+                if (totalFechamentos) {
+
+                    totalFechamentos.innerText =
+                        dados.fechamentos || 0;
+
+                }
+
+
+                const totalAlertas =
+                    document.getElementById(
+                        "totalAlertas"
+                    );
+
+                if (totalAlertas) {
+
+                    totalAlertas.innerText =
+                        dados.semBatidaHoje?.length || 0;
+
+                }
+
+
+                const hojeFormatada =
+                    new Date().toLocaleDateString(
+                        'pt-BR',
+                        {
+                            day: '2-digit',
+                            month: '2-digit'
+                        }
+                    );
+
+
+                const dataIsoHoje =
+                    new Date().toLocaleDateString(
+                        'pt-BR'
+                    );
+
+
+                const elD1 =
+                    document.getElementById(
+                        "dataHojeLabel"
+                    );
+
+
+                const elD2 =
+                    document.getElementById(
+                        "dataHojeLabel2"
+                    );
+
+
+                if (elD1) {
+
+                    elD1.innerText =
+                        hojeFormatada;
+
+                }
+
+
+                if (elD2) {
+
+                    elD2.innerText =
+                        hojeFormatada;
+
+                }
+
+
+                // =================================================
+                // PONTUAIS HOJE
+                // =================================================
+
+                const listPontuais =
+                    document.getElementById(
+                        "listaPontuaisHoje"
+                    );
+
+
+                if (listPontuais) {
+
+                    listPontuais.innerHTML = "";
+
+
+                    if (
+                        dados.pontuaisHoje &&
+                        dados.pontuaisHoje.length > 0
+                    ) {
+
+                        dados.pontuaisHoje.forEach(
+                            i => {
+
+                                listPontuais.innerHTML += `
+
+                                    <li
+                                        class="ranking-item"
+                                    >
+
+                                        <span>
+                                            ${i.nome}
+                                        </span>
+
+                                        <span
+                                            style="
+                                                color:#15803d;
+                                                font-weight:bold;
+                                            "
+                                        >
+                                            ${i.hora}
+                                        </span>
+
+                                    </li>
+
+                                `;
+
+                            }
+                        );
+
+                    } else {
+
+                        listPontuais.innerHTML = `
+
+                            <li
+                                style="
+                                    color:#94a3b8;
+                                    font-size:0.85rem;
+                                    padding:5px 0;
+                                "
+                            >
+                                Nenhum registro no horário.
+                            </li>
+
+                        `;
+
+                    }
+
+                }
+
+
+                // =================================================
+                // ATRASADOS HOJE
+                // =================================================
+
+                const listAtrasados =
+                    document.getElementById(
+                        "listaAtrasadosHoje"
+                    );
+
+
+                if (listAtrasados) {
+
+                    listAtrasados.innerHTML = "";
+
+
+                    if (
+                        dados.atrasadosHoje &&
+                        dados.atrasadosHoje.length > 0
+                    ) {
+
+                        dados.atrasadosHoje.forEach(
+                            i => {
+
+                                listAtrasados.innerHTML += `
+
+                                    <li
+                                        class="ranking-item"
+                                    >
+
+                                        <span>
+                                            ${i.nome}
+                                        </span>
+
+                                        <span
+                                            style="
+                                                color:#b91c1c;
+                                                font-weight:bold;
+                                            "
+                                        >
+                                            ${i.hora}
+                                        </span>
+
+                                    </li>
+
+                                `;
+
+                            }
+                        );
+
+                    } else {
+
+                        listAtrasados.innerHTML = `
+
+                            <li
+                                style="
+                                    color:#94a3b8;
+                                    font-size:0.85rem;
+                                    padding:5px 0;
+                                "
+                            >
+                                Nenhum atraso hoje! 🎉
+                            </li>
+
+                        `;
+
+                    }
+
+                }
+
+
+                // =================================================
+                // ALERTA DE RISCO
+                // =================================================
+
+                const listAlerta =
+                    document.getElementById(
+                        "listaAlertaRisco"
+                    );
+
+
+                if (listAlerta) {
+
+                    listAlerta.innerHTML = "";
+
+
+                    if (
+                        dados.alertaRisco &&
+                        dados.alertaRisco.length > 0
+                    ) {
+
+                        dados.alertaRisco.forEach(
+                            i => {
+
+                                let corBadge =
+                                    i.total_atrasos >= 4
+                                        ? '#b91c1c'
+                                        : '#d97706';
+
+
+                                listAlerta.innerHTML += `
+
+                                    <li
+                                        class="ranking-item"
+                                    >
+
+                                        <span>
+                                            ${i.nome}
+                                        </span>
+
+                                        <span
+                                            style="
+                                                background:${corBadge}15;
+                                                color:${corBadge};
+                                                padding:2px 8px;
+                                                border-radius:4px;
+                                                font-weight:bold;
+                                            "
+                                        >
+                                            ${i.total_atrasos}
+                                            ${
+                                                i.total_atrasos === 1
+                                                    ? 'dia'
+                                                    : 'dias'
+                                            }
+                                        </span>
+
+                                    </li>
+
+                                `;
+
+                            }
+                        );
+
+                    } else {
+
+                        listAlerta.innerHTML = `
+
+                            <li
+                                style="
+                                    color:#94a3b8;
+                                    font-size:0.85rem;
+                                    padding:5px 0;
+                                "
+                            >
+                                Nenhum funcionário em risco.
+                            </li>
+
+                        `;
+
+                    }
+
+                }
+
+
+                // =================================================
+                // RESUMO DIÁRIO
+                // =================================================
+
+                const tResumo =
+                    document.getElementById(
+                        "listaResumoHoje"
+                    );
+
+
+                if (tResumo) {
+
+                    tResumo.innerHTML = "";
+
+
+                    if (
+                        dados.resumoHoje &&
+                        dados.resumoHoje.length > 0
+                    ) {
+
+                        dados.resumoHoje.forEach(
+                            f => {
+
+                                tResumo.innerHTML += `
+
+                                    <tr
+                                        style="
+                                            border-bottom:1px solid #e2e8f0;
+                                            text-align:center;
+                                        "
+                                    >
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                                text-align:left;
+                                                font-weight:500;
+                                                color:#334155;
+                                            "
+                                        >
+                                            ${f.nome}
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                                color:#0f172a;
+                                            "
+                                        >
+                                            ${f.b1}
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                                color:#0f172a;
+                                            "
+                                        >
+                                            ${f.b2}
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                                color:#0f172a;
+                                            "
+                                        >
+                                            ${f.b3}
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                                color:#0f172a;
+                                            "
+                                        >
+                                            ${f.b4}
+                                        </td>
+
+
+                                        <td
+                                            style="
+                                                padding:10px;
+                                            "
+                                        >
+
+                                            <button
+                                                onclick="
+                                                    abrirEdicaoRH(
+                                                        '${f.id}',
+                                                        '${dataIsoHoje}',
+                                                        '${f.b1}',
+                                                        '${f.b2}',
+                                                        '${f.b3}',
+                                                        '${f.b4}'
+                                                    )
+                                                "
+                                                class="btn-ajustar"
+                                            >
+                                                ✏️ Editar
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                `;
+
+                            }
+                        );
+
+                    } else {
+
+                        tResumo.innerHTML = `
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    style="
+                                        padding:20px;
+                                        color:#888;
+                                    "
+                                >
+                                    Nenhum funcionário cadastrado.
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    }
+
+                }
+
+
+                // =================================================
+                // SEM BATIDA
+                // =================================================
+
+                const t2 =
+                    document.getElementById(
+                        "listaSemBatida"
+                    );
+
+
+                if (t2) {
+
+                    t2.innerHTML =
+                        dados.semBatidaHoje
+                            ?.map(
+                                f => `
+
+                                    <tr>
+
+                                        <td>
+                                            ${f.nome}
+                                        </td>
+
+                                        <td>
+                                            ${f.cargo}
+                                        </td>
+
+                                    </tr>
+
+                                `
+                            )
+                            .join('')
+
+                        ||
+
+                        `
+                            <tr>
+
+                                <td colspan="2">
+                                    Todos registraram
+                                </td>
+
+                            </tr>
+                        `;
+
+                }
+
+
+            } catch (e) {
+
+                console.error(
+                    "Erro dashboard:",
+                    e
+                );
+
             }
+
         }
+
+
+        // =========================================================
+        // INICIAR DASHBOARD
+        // =========================================================
 
         carregarDashboard();
-        intervalDashboard = setInterval(carregarDashboard, 10000);
+
+
+        intervalDashboard =
+            setInterval(
+                carregarDashboard,
+                10000
+            );
+
     </script>
+
 </body>
 </html>

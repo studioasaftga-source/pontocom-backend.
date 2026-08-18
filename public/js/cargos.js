@@ -10,7 +10,7 @@
 
     const HOST = window.location.hostname;
 
-    let API_URL = "";
+    var API_URL = "";
 
     if (
         HOST === "localhost" ||
@@ -703,36 +703,128 @@
     // INICIALIZAÇÃO AUTOMÁTICA
     // ============================================================
 
+    let cargosInicializados = false;
+    let observerCargos = null;
+
+
     function iniciar() {
+
+        // Evita que o módulo seja iniciado várias vezes
+        if (cargosInicializados) {
+            return;
+        }
 
         console.log(
             "🚀 Iniciando módulo de cargos..."
         );
+
 
         const tabela =
             document.getElementById(
                 "tabelaCargosBody"
             );
 
+
+        // ========================================================
+        // TABELA JÁ EXISTE
+        // ========================================================
+
         if (tabela) {
+
+            cargosInicializados = true;
+
+            console.log(
+                "✅ Tabela de cargos encontrada. Carregando..."
+            );
 
             carregarListaCargos();
 
-        } else {
 
-            console.log(
-                "⏳ Tabela ainda não está no DOM. Aguardando..."
+            // Se o observer estiver ativo, encerra
+            if (observerCargos) {
+
+                observerCargos.disconnect();
+
+                observerCargos = null;
+            }
+
+            return;
+        }
+
+
+        // ========================================================
+        // TABELA AINDA NÃO EXISTE
+        // ========================================================
+
+        console.log(
+            "⏳ Tabela de cargos ainda não está no DOM."
+        );
+
+
+        // Evita criar vários observers
+        if (observerCargos) {
+            return;
+        }
+
+
+        // ========================================================
+        // OBSERVAR ALTERAÇÕES NO DOM
+        // ========================================================
+
+        observerCargos =
+            new MutationObserver(function () {
+
+                const tabelaAtual =
+                    document.getElementById(
+                        "tabelaCargosBody"
+                    );
+
+
+                if (!tabelaAtual) {
+                    return;
+                }
+
+
+                console.log(
+                    "✅ Tabela de cargos apareceu no DOM."
+                );
+
+
+                cargosInicializados = true;
+
+
+                carregarListaCargos();
+
+
+                observerCargos.disconnect();
+
+                observerCargos = null;
+            });
+
+
+        // Observa alterações na página
+        if (document.body) {
+
+            observerCargos.observe(
+                document.body,
+                {
+                    childList: true,
+                    subtree: true
+                }
             );
 
-            setTimeout(
-                iniciar,
-                300
+        } else {
+
+            console.warn(
+                "⚠️ document.body ainda não está disponível."
             );
         }
     }
 
 
-    // Executa quando o documento estiver pronto
+    // ============================================================
+    // EXECUTA QUANDO O DOCUMENTO ESTIVER PRONTO
+    // ============================================================
 
     if (
         document.readyState ===
@@ -741,12 +833,16 @@
 
         document.addEventListener(
             "DOMContentLoaded",
-            iniciar
+            iniciar,
+            {
+                once: true
+            }
         );
 
     } else {
 
         iniciar();
     }
+
 
 })();

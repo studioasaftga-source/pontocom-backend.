@@ -1,52 +1,75 @@
-// Importe a sua conexão com o banco de dados aqui
-// Ajuste o caminho "../config/db" se o seu arquivo de conexão tiver outro nome ou local
 const pool = require("../database"); 
 
 const carregarDashboard = async (req, res) => {
     try {
-        // ==============================
-        // TOTAL FUNCIONÁRIOS
-        // ==============================
         const funcionarios = await pool.query(`
             SELECT COUNT(*) 
             FROM funcionarios
             WHERE ativo = true
         `);
 
-        // ==============================
-        // TOTAL CARGOS
-        // ==============================
         const cargos = await pool.query(`
             SELECT COUNT(*)
             FROM cargos
         `);
 
-        // ==============================
-        // BATIDAS HOJE
-        // ==============================
         const batidas = await pool.query(`
             SELECT COUNT(*)
             FROM registros_ponto
-            WHERE data_registro = CURRENT_DATE
+            WHERE DATE(data_hora AT TIME ZONE 'America/Cuiaba') = CURRENT_DATE
         `);
 
-        // ==============================
-        // FECHAMENTOS
-        // ==============================
         const fechamentos = await pool.query(`
             SELECT COUNT(*)
             FROM fechamentos_ponto
         `);
 
         // ==============================
-        // ÚLTIMAS BATIDAS
+        // RESUMO DIÁRIO DE HOJE (Funcionário por Funcionário)
         // ==============================
-        const ultimasBatidas = await pool.query(`
-            SELECT f.nome, r.tipo_registro, r.hora_entrada, r.status_validacao
-            FROM registros_ponto r
-            INNER JOIN funcionarios f ON f.id = r.funcionario_id
-            ORDER BY r.id DESC LIMIT 10
+        const funcionariosRes = await pool.query(`
+            SELECT f.id, f.nome
+            FROM funcionarios f
+            WHERE f.ativo = true
+            ORDER BY f.nome
         `);
+
+        const batidasHojeRes = await pool.query(`
+            SELECT funcionario_id, tipo, data_hora
+            FROM registros_ponto
+            WHERE DATE(data_hora AT TIME ZONE 'America/Cuiaba') = CURRENT_DATE
+            ORDER BY data_hora ASC
+        `);
+
+        const batidasPorFuncionario = {};
+        batidasHojeRes.rows.forEach(b => {
+            if (!batidasPorFuncionario[b.funcionario_id]) {
+                batidasPorFuncionario[b.funcionario_id] = [];
+            }
+            const horaFmt = new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Cuiaba', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false 
+            }).format(new Date(b.data_hora));
+
+            batidasPorFuncionario[b.funcionario_id].push({
+                tipo: b.tipo,
+                hora: horaFmt
+            });
+        });
+
+        const resumoHoje = funcionariosRes.rows.map(f => {
+            const batidasList = batidasPorFuncionario[f.id] || [];
+            return {
+                id: f.id,
+                nome: f.nome,
+                b1: batidasList.find(b => b.tipo === 'ENTRADA')?.hora || '--:--',
+                b2: batidasList.find(b => b.tipo === 'SAIDA_ALMOCO')?.hora || '--:--',
+                b3: batidasList.find(b => b.tipo === 'RETORNO_ALMOCO')?.hora || '--:--',
+                b4: batidasList.find(b => b.tipo === 'SAIDA')?.hora || '--:--'
+            };
+        });
 
         // ==============================
         // FUNCIONÁRIOS SEM BATIDA HOJE
@@ -58,9 +81,59 @@ const carregarDashboard = async (req, res) => {
             WHERE f.ativo = true
             AND NOT EXISTS(
                 SELECT 1 FROM registros_ponto r
-                WHERE r.funcionario_id = f.id AND r.data_registro = CURRENT_DATE
+                WHERE r.funcionario_id = f.id AND DATE(r.data_hora AT TIME ZONE 'America/Cuiaba') = CURRENT_DATE
             )
             ORDER BY f.nome
+        `);
+
+        // ==============================
+        // PONTUAIS E ATRASADOS DE HOJE
+        // ==============================
+        const pontualidadeHoje = await pool.query(`
+            SELECT 
+                f.id,
+                f.nome,
+                MIN(r.data_hora) as primeira_entrada
+            FROM registros_ponto r
+            JOIN funcionarios f ON r.funcionario_id = f.id
+            WHERE r.tipo = 'ENTRADA' 
+            AND DATE(r.data_hora AT TIME ZONE 'America/Cuiaba') = CURRENT_DATE
+            GROUP BY f.id, f.nome
+        `);
+
+        const pontuaisHoje = [];
+        const atrasadosHoje = [];
+
+        pontualidadeHoje.rows.forEach(p => {
+            const horaEntradaStr = new Intl.DateTimeFormat('pt-BR', {
+                timeZone: 'America/Cuiaba',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).format(new Date(p.primeira_entrada));
+
+            if (horaEntradaStr <= '07:35:00') {
+                pontuaisHoje.push({ nome: p.nome, hora: horaEntradaStr });
+            } else {
+                atrasadosHoje.push({ nome: p.nome, hora: horaEntradaStr });
+            }
+        });
+
+        // ==============================
+        // ALERTA DE RISCO MENSAL (VALE)
+        // ==============================
+        const alertaMes = await pool.query(`
+            SELECT 
+                f.nome,
+                COUNT(r.id) as total_atrasos
+            FROM registros_ponto r
+            JOIN funcionarios f ON r.funcionario_id = f.id
+            WHERE r.tipo = 'ENTRADA' 
+            AND DATE_TRUNC('month', r.data_hora AT TIME ZONE 'America/Cuiaba') = DATE_TRUNC('month', CURRENT_DATE)
+            AND TO_CHAR(r.data_hora AT TIME ZONE 'America/Cuiaba', 'HH24:MI:SS') > '07:35:00'
+            GROUP BY f.id, f.nome
+            ORDER BY total_atrasos DESC
+            LIMIT 5
         `);
 
         res.json({
@@ -68,8 +141,11 @@ const carregarDashboard = async (req, res) => {
             cargos: Number(cargos.rows[0].count),
             batidasHoje: Number(batidas.rows[0].count),
             fechamentos: Number(fechamentos.rows[0].count),
-            ultimasBatidas: ultimasBatidas.rows,
-            semBatidaHoje: semBatida.rows
+            resumoHoje: resumoHoje,
+            semBatidaHoje: semBatida.rows,
+            pontuaisHoje: pontuaisHoje,
+            atrasadosHoje: atrasadosHoje,
+            alertaRisco: alertaMes.rows
         });
 
     } catch(error) {

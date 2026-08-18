@@ -1,7 +1,4 @@
-// ============================================================
-// CONFIGURAÇÃO DA API (AUTOMÁTICA)
-// ============================================================
-let API_URL = "";
+var API_URL = ""; 
 
 if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
     API_URL = "http://localhost:3000";
@@ -9,17 +6,8 @@ if (window.location.hostname === "localhost" || window.location.hostname === "12
     API_URL = "https://pontocom-backend.onrender.com";
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    carregarSolicitacoesPendentes();
-    carregarFuncionariosSelect();
-});
-
-// Criamos um "dicionário" temporário para guardar as imagens na memória da tela
 window.anexosPonto = {};
 
-// ==========================================
-// 1. ALTERNAR ABAS
-// ==========================================
 function alternarAba(abaId) {
     document.getElementById('abaSolicitacoes').style.display = 'none';
     document.getElementById('abaFechamento').style.display = 'none';
@@ -32,9 +20,6 @@ function alternarAba(abaId) {
     event.currentTarget.style.color = '#ffffff';
 }
 
-// ==========================================
-// 2. GESTÃO DE ATESTADOS E SOLICITAÇÕES
-// ==========================================
 async function carregarSolicitacoesPendentes() {
     const tbody = document.getElementById('listaSolicitacoesPendentes');
     if (!tbody) return;
@@ -50,7 +35,6 @@ async function carregarSolicitacoesPendentes() {
             return;
         }
 
-        // Limpa os anexos antigos toda vez que recarrega a tabela
         window.anexosPonto = {};
 
         tbody.innerHTML = solicitacoes.map(sol => {
@@ -77,7 +61,7 @@ async function carregarSolicitacoesPendentes() {
 
                         <div style="display: flex; justify-content: space-between; background: white; padding: 8px; border-radius: 4px; border: 1px dashed #cbd5e1; margin-bottom: 10px;">
                             <div style="text-align: center; flex: 1; border-right: 1px solid #e2e8f0;">
-                                <span style="font-size: 11px; color: #64748b; font-weight: 700; display: block; text-transform: uppercase;">Batida Original</span>
+                                <span style="font-size: 11px; color: #64748b; font-weight: 700; display: block; text-transform: uppercase;">Batidas do Dia</span>
                                 <strong style="color: #475569; font-size: 14px;">${horarioOriginal}</strong>
                             </div>
                             <div style="text-align: center; flex: 1;">
@@ -104,9 +88,7 @@ async function carregarSolicitacoesPendentes() {
                 `;
             }
 
-            if (sol.anexo_url) {
-                window.anexosPonto[sol.id] = sol.anexo_url;
-            }
+            if (sol.anexo_url) { window.anexosPonto[sol.id] = sol.anexo_url; }
 
             return `
             <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;">
@@ -121,18 +103,12 @@ async function carregarSolicitacoesPendentes() {
                     ${detalhesVisual}
                 </td>
                 <td style="padding: 16px; vertical-align: top; text-align: center;">
-                    ${sol.anexo_url 
-                        ? `<button onclick="visualizarAnexo(${sol.id})" style="color: #2563eb; font-weight: bold; background: #eff6ff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;">📎 Ver Anexo</button>` 
-                        : '<span style="color: #94a3b8; font-size: 13px;">Sem anexo</span>'}
+                    ${sol.anexo_url ? `<button onclick="visualizarAnexo(${sol.id})" style="color: #2563eb; font-weight: bold; background: #eff6ff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;">📎 Ver Anexo</button>` : '<span style="color: #94a3b8; font-size: 13px;">Sem anexo</span>'}
                 </td>
                 <td style="padding: 16px; vertical-align: top;">
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="responderSolicitacao(${sol.id}, 'Aprovado')" style="background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
-                            ✓ Aprovar
-                        </button>
-                        <button onclick="responderSolicitacao(${sol.id}, 'Recusado')" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);">
-                            ✕ Recusar
-                        </button>
+                        <button onclick="responderSolicitacao(${sol.id}, 'Aprovado')" style="background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">✓ Aprovar</button>
+                        <button onclick="responderSolicitacao(${sol.id}, 'Recusado')" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">✕ Recusar</button>
                     </div>
                 </td>
             </tr>
@@ -147,164 +123,47 @@ async function carregarSolicitacoesPendentes() {
 
 function visualizarAnexo(id) {
     const base64 = window.anexosPonto[id];
-    if (!base64) {
-        alert("Erro ao carregar anexo.");
-        return;
-    }
-
+    if (!base64) { alert("Erro ao carregar anexo."); return; }
     const novaAba = window.open();
-    novaAba.document.write(`
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <title>Visualizador de Atestado</title>
-                <style>
-                    body {
-                        margin: 0;
-                        background-color: #0b0f19;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                    }
-                    img {
-                        max-width: 95%;
-                        max-height: 95%;
-                        border-radius: 8px;
-                        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-                    }
-                </style>
-            </head>
-            <body>
-                <img src="${base64}" alt="Atestado">
-            </body>
-        </html>
-    `);
+    novaAba.document.write(`<html><head><title>Anexo</title><style>body{margin:0;background:#0b0f19;display:flex;justify-content:center;align-items:center;height:100vh;}img{max-width:95%;max-height:95%;border-radius:8px;}</style></head><body><img src="${base64}"></body></html>`);
     novaAba.document.close();
 }
 
 async function responderSolicitacao(id, status) {
     let respostaRH = "";
-    if (status === 'Recusado') {
-        respostaRH = prompt("Informe o motivo da recusa (opcional):");
-    }
+    if (status === 'Recusado') { respostaRH = prompt("Informe o motivo da recusa (opcional):"); }
 
     try {
         const resposta = await fetch(`${API_URL}/api/controle-ponto/solicitacoes/responder`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                solicitacao_id: id,
-                status: status,
-                resposta_rh: respostaRH
-            })
+            body: JSON.stringify({ solicitacao_id: id, status: status, resposta_rh: respostaRH })
         });
-
         const resultado = await resposta.json();
-
         if (resposta.ok) {
             alert(`✅ ${resultado.mensagem}`);
             carregarSolicitacoesPendentes(); 
-        } else {
-            alert(`❌ Erro: ${resultado.erro}`);
-        }
-    } catch (erro) {
-        console.error("Erro ao responder solicitação:", erro);
-        alert("Erro de conexão ao processar resposta.");
-    }
+        } else { alert(`❌ Erro: ${resultado.erro}`); }
+    } catch (erro) { alert("Erro de conexão ao processar resposta."); }
 }
 
-// ==========================================
-// 3. FECHAMENTO MENSAL E DSR
-// ==========================================
 async function carregarFuncionariosSelect() {
     const select = document.getElementById('selectFuncionarioFechamento');
     if (!select) return;
-
     try {
         const resposta = await fetch(`${API_URL}/api/funcionarios`);
         const funcionarios = await resposta.json();
-
-        select.innerHTML = '<option value="">Selecione o Funcionário...</option>' + 
-            funcionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
-    } catch (erro) {
-        console.error("Erro ao carregar lista de funcionários:", erro);
-    }
+        select.innerHTML = '<option value="">Selecione o Funcionário...</option>' + funcionarios.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+    } catch (erro) {}
 }
 
-async function carregarFechamentoRH() {
-    const funcionarioId = document.getElementById('selectFuncionarioFechamento').value;
-    const mesAno = document.getElementById('inputMesAnoFechamento').value;
-
-    if (!funcionarioId || !mesAno) {
-        alert("Selecione um funcionário e o mês/ano para calcular.");
-        return;
-    }
-
-    const [ano, mes] = mesAno.split('-');
-
-    try {
-        const resposta = await fetch(`${API_URL}/api/ponto/espelho/${funcionarioId}/${mes}/${ano}`);
-        const dados = await resposta.json();
-
-        if (resposta.ok && dados.totais) {
-            document.getElementById('resumoHorasTrabalhadas').innerText = dados.totais.horasTrabalhadas || "00:00";
-            document.getElementById('resumoHorasExtras').innerText = dados.totais.horasExtras || "00:00";
-            document.getElementById('resumoAtrasosFaltas').innerText = dados.totais.atrasosFaltas || "00:00";
-            document.getElementById('inputValorDSR').value = dados.totais.valorDSR || "0.00";
-        }
-    } catch (erro) {
-        console.error("Erro ao carregar dados do fechamento:", erro);
-        alert("Erro ao buscar cálculos do mês selecionado.");
-    }
-}
-
-async function liberarFechamentoParaFuncionario() {
-    const funcionarioId = document.getElementById('selectFuncionarioFechamento').value;
-    const mesAno = document.getElementById('inputMesAnoFechamento').value;
-
-    if (!funcionarioId || !mesAno) {
-        alert("Selecione o funcionário e o mês/ano antes de liberar.");
-        return;
-    }
-
-    const [ano, mes] = mesAno.split('-');
-    const horasTrabalhadas = document.getElementById('resumoHorasTrabalhadas').innerText + ':00';
-    const horasExtras = document.getElementById('resumoHorasExtras').innerText + ':00';
-    const atrasosFaltas = document.getElementById('resumoAtrasosFaltas').innerText + ':00';
-    const valorDSR = parseFloat(document.getElementById('inputValorDSR').value) || 0.00;
-
-    try {
-        const resposta = await fetch(`${API_URL}/api/controle-ponto/fechamento/liberar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                funcionario_id: funcionarioId,
-                mes: parseInt(mes),
-                ano: parseInt(ano),
-                total_horas_trabalhadas: horasTrabalhadas,
-                total_horas_extras: horasExtras,
-                total_atrasos_faltas: atrasosFaltas,
-                valor_dsr: valorDSR
-            })
-        });
-
-        const dados = await resposta.json();
-
-        if (resposta.ok) {
-            alert("✅ Espelho de ponto liberado com sucesso para o colaborador!");
-        } else {
-            alert("❌ Erro: " + dados.erro);
-        }
-    } catch (erro) {
-        console.error("Erro na liberação:", erro);
-        alert("Erro ao enviar liberação de fechamento.");
-    }
-}
-
-// Funções Utilitárias
 function formatarData(dataIso) {
     if (!dataIso) return '-';
     const data = new Date(dataIso);
     return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
+
+setTimeout(() => {
+    carregarSolicitacoesPendentes();
+    carregarFuncionariosSelect();
+}, 200);

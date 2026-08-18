@@ -1,206 +1,1711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gestão de Vales</title>
+
+    <style>
+
+        .titulo-pagina {
+            margin-bottom: 20px;
+        }
+
+        .titulo-pagina h2 {
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tabela {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tabela th {
+            text-align: left;
+            padding: 10px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 13px;
+        }
+
+        .tabela td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .btn-vale {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .btn-aprovar {
+            background: #10b981;
+        }
+
+        .btn-aprovar:hover {
+            background: #059669;
+        }
+
+        .btn-recusar {
+            background: #f43f5e;
+        }
+
+        .btn-recusar:hover {
+            background: #e11d48;
+        }
+
+        .btn-whatsapp-financeiro {
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .btn-whatsapp-colaborador {
+            background: #38bdf8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .btn-whatsapp-financeiro:hover {
+            background: #16b958;
+        }
+
+        .btn-whatsapp-colaborador:hover {
+            background: #0ea5e9;
+        }
+
+        .status-aprovado {
+            display: block;
+            color: #059669;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .status-recusado {
+            display: block;
+            color: #e11d48;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .mensagem-ajuda {
+            font-size: 10px;
+            color: #64748b;
+            display: block;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 900px) {
+
+            .card {
+                overflow-x: auto;
+            }
+
+            .tabela {
+                min-width: 900px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
 <div class="titulo-pagina">
-    <h2>💸 Gestão de Adiantamentos (Vales)</h2>
+
+    <h2>
+        &#128176; Gestão de Adiantamentos (Vales)
+    </h2>
+
 </div>
+
 
 <div class="card">
+
     <table class="tabela">
+
         <thead>
+
             <tr>
+
                 <th>Colaborador</th>
+
                 <th>Data</th>
+
                 <th>Valor Solicitado</th>
+
                 <th>Motivo</th>
+
                 <th>Chave PIX</th>
+
                 <th>Ações</th>
+
             </tr>
+
         </thead>
+
+
         <tbody id="tabela-vales-corpo">
+
             <tr>
-                <td colspan="6" style="text-align: center; color: #94a3b8;">Carregando solicitações...</td>
+
+                <td
+                    colspan="6"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:20px;
+                    "
+                >
+
+                    &#8987; Carregando solicitações...
+
+                </td>
+
             </tr>
+
         </tbody>
+
     </table>
+
 </div>
 
+
 <script>
-    (function() {
-        const URL_API = '/api'; 
-        let WPP_DONO = ""; 
 
-        // Link padrão para abertura do WhatsApp
-        const urlBaseWhatsapp = 'whatsapp://send';
+(function () {
 
-        // 1. Busca o WhatsApp do Financeiro salvo em Configurações
-        async function carregarWhatsappFinanceiro() {
-            try {
-                const res = await fetch(`${URL_API}/configuracoes`); 
-                const dados = await res.json();
-                
-                if (dados && (dados.whatsapp_financeiro || dados.telefone_financeiro)) {
-                    const numBruto = dados.whatsapp_financeiro || dados.telefone_financeiro;
-                    const apenasNumeros = String(numBruto).replace(/\D/g, '');
-                    if (apenasNumeros.startsWith('55') && apenasNumeros.length >= 12) {
-                        WPP_DONO = apenasNumeros;
-                    } else {
-                        WPP_DONO = '55' + apenasNumeros;
+    "use strict";
+
+
+    // ============================================================
+    // CONFIGURAÇÃO DA API
+    // ============================================================
+
+    const API_BASE =
+        (
+            window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1"
+        )
+            ? "http://localhost:3000/api"
+            : "https://pontocom-backend.onrender.com/api";
+
+
+    console.log("========================================");
+
+    console.log("💸 GESTÃO DE VALES");
+
+    console.log("🌐 API:", API_BASE);
+
+    console.log("📍 URL:", window.location.href);
+
+    console.log("========================================");
+
+
+    // ============================================================
+    // WHATSAPP DO FINANCEIRO
+    // ============================================================
+
+    let WPP_DONO = "";
+
+
+    // ============================================================
+    // REFERÊNCIA DA JANELA DO WHATSAPP
+    //
+    // IMPORTANTE:
+    // Essa variável guarda a janela aberta pelo sistema.
+    // Enquanto ela estiver aberta, os próximos cliques
+    // reutilizarão a mesma janela.
+    // ============================================================
+
+    let janelaWhatsApp = null;
+
+
+    // Nome fixo da janela.
+    //
+    // NÃO usar "_blank".
+    //
+    // O navegador entende que "WhatsAppWebRH" é sempre
+    // a mesma janela.
+    const NOME_JANELA_WHATSAPP = "WhatsAppWebRH";
+
+
+    // ============================================================
+    // TABELA
+    // ============================================================
+
+    function obterTabela() {
+
+        return document.getElementById(
+            "tabela-vales-corpo"
+        );
+
+    }
+
+
+    // ============================================================
+    // ESCAPAR HTML
+    // ============================================================
+
+    function escaparHTML(valor) {
+
+        return String(valor ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    // ============================================================
+    // ESCAPAR PARA JAVASCRIPT
+    // ============================================================
+
+    function escaparJS(valor) {
+
+        return String(valor ?? "")
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, "\\r")
+            .replace(/\n/g, "\\n");
+
+    }
+
+
+    // ============================================================
+    // CARREGAR WHATSAPP DO FINANCEIRO
+    // ============================================================
+
+    async function carregarWhatsappFinanceiro() {
+
+        console.log(
+            "📞 Buscando WhatsApp do financeiro..."
+        );
+
+
+        try {
+
+            const resposta = await fetch(
+                `${API_BASE}/configuracoes`,
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        "Accept": "application/json"
                     }
-                } else {
-                    WPP_DONO = ""; 
                 }
-            } catch (e) {
-                console.error("Erro ao carregar WhatsApp:", e);
+            );
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    `Erro HTTP ${resposta.status}`
+                );
+
+            }
+
+
+            const dados =
+                await resposta.json();
+
+
+            const numero =
+                dados?.whatsapp_financeiro ||
+                dados?.telefone_financeiro ||
+                "";
+
+
+            const apenasNumeros =
+                String(numero).replace(/\D/g, "");
+
+
+            if (!apenasNumeros) {
+
                 WPP_DONO = "";
+
+                console.warn(
+                    "⚠️ WhatsApp financeiro não cadastrado."
+                );
+
+                return;
+
             }
+
+
+            if (
+                apenasNumeros.startsWith("55") &&
+                apenasNumeros.length >= 12
+            ) {
+
+                WPP_DONO =
+                    apenasNumeros;
+
+            } else {
+
+                WPP_DONO =
+                    "55" + apenasNumeros;
+
+            }
+
+
+            console.log(
+                "✅ WhatsApp financeiro carregado."
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar WhatsApp do financeiro:",
+                erro
+            );
+
+            WPP_DONO = "";
+
         }
 
-        // 2. Busca e renderiza os vales pendentes
-        async function carregarValesPendentes() {
-            const tbody = document.getElementById('tabela-vales-corpo');
-            if (!tbody) return;
+    }
+
+
+    // ============================================================
+    // CONSTRUIR URL DO WHATSAPP WEB
+    // ============================================================
+
+    function criarLinkWhatsApp(
+        telefone,
+        mensagem
+    ) {
+
+        const numero =
+            String(telefone || "")
+                .replace(/\D/g, "");
+
+
+        if (!numero) {
+
+            return "";
+
+        }
+
+
+        const telefoneFinal =
+            numero.startsWith("55")
+                ? numero
+                : "55" + numero;
+
+
+        const texto =
+            encodeURIComponent(
+                String(mensagem || "")
+            );
+
+
+        return (
+            "https://web.whatsapp.com/send" +
+            "?phone=" +
+            telefoneFinal +
+            "&text=" +
+            texto
+        );
+
+    }
+
+
+    // ============================================================
+    // ABRIR / REUTILIZAR WHATSAPP WEB
+    // ============================================================
+
+    window.abrirWhatsAppWeb =
+        function (telefone, mensagem) {
+
+            const link =
+                criarLinkWhatsApp(
+                    telefone,
+                    mensagem
+                );
+
+
+            if (!link) {
+
+                alert(
+                    "⚠️ Número de telefone não cadastrado."
+                );
+
+                return;
+
+            }
+
+
+            // ====================================================
+            // CASO 1:
+            // JÁ TEMOS UMA JANELA ABERTA PELO SISTEMA
+            // ====================================================
+
+            if (
+                janelaWhatsApp &&
+                !janelaWhatsApp.closed
+            ) {
+
+                console.log(
+                    "♻️ WhatsApp Web já está aberto."
+                );
+
+                console.log(
+                    "♻️ Reutilizando a mesma janela."
+                );
+
+
+                try {
+
+                    // Muda a conversa da mesma janela.
+                    janelaWhatsApp.location.href =
+                        link;
+
+
+                    // Coloca a janela em primeiro plano.
+                    janelaWhatsApp.focus();
+
+
+                    return;
+
+                } catch (erro) {
+
+                    console.warn(
+                        "⚠️ Não foi possível reutilizar a janela:",
+                        erro
+                    );
+
+
+                    janelaWhatsApp = null;
+
+                }
+
+            }
+
+
+            // ====================================================
+            // CASO 2:
+            // PRIMEIRA ABERTURA
+            // ====================================================
+
+            console.log(
+                "📱 Abrindo WhatsApp Web..."
+            );
+
+
+            /*
+             * ATENÇÃO:
+             *
+             * Aqui usamos um NOME FIXO:
+             *
+             *     WhatsAppWebRH
+             *
+             * e NÃO usamos "_blank".
+             *
+             * Se essa janela já existir, o navegador
+             * tende a reutilizar o mesmo contexto.
+             */
+
+            janelaWhatsApp =
+                window.open(
+                    link,
+                    NOME_JANELA_WHATSAPP
+                );
+
+
+            // ====================================================
+            // POP-UP BLOQUEADO
+            // ====================================================
+
+            if (!janelaWhatsApp) {
+
+                alert(
+                    "O navegador bloqueou a abertura do WhatsApp Web.\n\n" +
+                    "Permita pop-ups para este sistema e tente novamente."
+                );
+
+                return;
+
+            }
+
 
             try {
-                const res = await fetch(`${URL_API}/vale/pendentes`);
-                const data = await res.json();
-                
-                if (!Array.isArray(data)) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="color: #f43f5e; text-align: center;">Erro interno no servidor (500).</td></tr>';
-                    return;
-                }
 
-                tbody.innerHTML = '';
+                janelaWhatsApp.focus();
 
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma solicitação pendente no momento.</td></tr>';
-                    return;
-                }
-
-                data.forEach(vale => {
-                    const nomeDoFuncionario = vale.funcionario_nome || vale.nome || 'Nome não encontrado';
-                    const dataFormatada = new Date(vale.data_solicitacao).toLocaleDateString('pt-BR');
-                    const valorFormat = Number(vale.valor).toFixed(2).replace('.', ',');
-                    
-                    // Ajuste de leitura da Chave PIX e Telefone vindos do Supabase
-                    const pix = vale.chave_pix || vale.pix || 'Não cadastrada';
-                    const telefone = vale.funcionario_telefone || vale.telefone || '';
-
-                    tbody.innerHTML += `
-                        <tr id="linha-vale-${vale.id}">
-                            <td><strong>${nomeDoFuncionario}</strong></td>
-                            <td>${dataFormatada}</td>
-                            <td style="color: #10b981; font-weight: bold;">R$ ${valorFormat}</td>
-                            <td>${vale.resposta_rh || vale.justificativa || '--'}</td>
-                            <td>${pix}</td>
-                            <td id="acoes-vale-${vale.id}">
-                                <div style="display: flex; gap: 5px; flex-direction: column;">
-                                    <button onclick="window.aprovarValeRH(${vale.id}, '${nomeDoFuncionario}', '${valorFormat}', '${pix}', '${telefone}')" style="background-color: #10b981; color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Aprovar</button>
-                                    <button onclick="window.recusarValeRH(${vale.id})" style="background-color: #f43f5e; color: white; padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Recusar</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
             } catch (erro) {
-                tbody.innerHTML = '<tr><td colspan="6" style="color: #f43f5e; text-align: center;">Erro ao conectar com o servidor.</td></tr>';
+
+                console.warn(
+                    "Não foi possível focar a janela do WhatsApp.",
+                    erro
+                );
+
             }
+
+
+            console.log(
+                "✅ Janela do WhatsApp Web criada."
+            );
+
+        };
+
+
+    // ============================================================
+    // CARREGAR VALES PENDENTES
+    // ============================================================
+
+    async function carregarValesPendentes() {
+
+        const tbody =
+            obterTabela();
+
+
+        if (!tbody) {
+
+            console.error(
+                "❌ Elemento tabela-vales-corpo não encontrado."
+            );
+
+            return;
+
         }
 
-        // 3. Ação de Aprovação com a exibição dos dois botões de WhatsApp
-        window.aprovarValeRH = async function(id, nome, valor, pix, telColab) {
-            if(!confirm(`Aprovar o vale de R$ ${valor} para ${nome}?`)) return;
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    style="
+                        text-align:center;
+                        padding:25px;
+                        color:#64748b;
+                    "
+                >
+
+                    ⏳ Carregando solicitações...
+
+                </td>
+
+            </tr>
+
+        `;
+
+
+        try {
+
+            const url =
+                `${API_BASE}/vale/pendentes`;
+
+
+            console.log(
+                "🔍 Buscando vales:",
+                url
+            );
+
+
+            const resposta =
+                await fetch(
+                    url,
+                    {
+                        method: "GET",
+                        cache: "no-store",
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            console.log(
+                "📨 HTTP:",
+                resposta.status
+            );
+
+
+            const texto =
+                await resposta.text();
+
+
+            if (!resposta.ok) {
+
+                console.error(
+                    "Erro da API:",
+                    texto
+                );
+
+                throw new Error(
+                    `Erro HTTP ${resposta.status}`
+                );
+
+            }
+
+
+            let vales;
+
 
             try {
-                const res = await fetch(`${URL_API}/vale/responder`, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vale_id: id, status: 'Aprovado' })
-                });
-                const data = await res.json();
 
-                if(res.ok) {
-                    const eParty = "\u{1F389}"; 
-                    const eUser  = "\u{1F464}"; 
-                    const eMoney = "\u{1F4B8}"; 
-                    const eKey   = "\u{1F511}"; 
-                    const eRocket= "\u{1F680}"; 
-                    const eJoy   = "\u{0001F973}"; 
-                    const eBag   = "\u{1F4B0}"; 
-                    const ePin   = "\u{1F4CC}"; 
+                vales =
+                    texto
+                        ? JSON.parse(texto)
+                        : [];
 
-                    const textoDono = `${eParty} *Novo Vale Aprovado pelo RH!* ${eParty}\n\n` +
-                                      `${eUser} *Colaborador:* ${nome}\n` +
-                                      `${eMoney} *Valor:* R$ ${valor}\n` +
-                                      `${eKey} *Chave PIX:* ${pix}\n\n` +
-                                      `${eRocket} *Status:* Aguardando transferência financeira.`;
+            } catch (erroJSON) {
 
-                    const textoColab = `${eJoy} *Oba, ${nome}! Seu vale foi APROVADO!*\n\n` +
-                                       `${eBag} *Valor:* R$ ${valor}\n` +
-                                       `${ePin} *Forma de Envio:* PIX (${pix})\n\n` +
-                                       `O pagamento será realizado em breve. Tenha um ótimo dia! ${eRocket}`;
+                console.error(
+                    "Erro ao converter JSON:",
+                    erroJSON
+                );
 
-                    const paramsDono = new URLSearchParams({ phone: WPP_DONO, text: textoDono }).toString();
-                    const linkDono = WPP_DONO ? `${urlBaseWhatsapp}?${paramsDono}` : '#';
+                throw new Error(
+                    "A API retornou dados inválidos."
+                );
 
-                    // Formatação do telefone do colaborador
-                    let linkColab = '#';
-                    const apenasNumColab = telColab ? String(telColab).replace(/\D/g, '') : '';
-                    if (apenasNumColab) {
-                        const telFormatado = apenasNumColab.startsWith('55') ? apenasNumColab : '55' + apenasNumColab;
-                        const paramsColab = new URLSearchParams({ phone: telFormatado, text: textoColab }).toString();
-                        linkColab = `${urlBaseWhatsapp}?${paramsColab}`;
+            }
+
+
+            console.log(
+                "📋 Vales recebidos:",
+                vales
+            );
+
+
+            if (!Array.isArray(vales)) {
+
+                tbody.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            style="
+                                text-align:center;
+                                padding:25px;
+                                color:#f43f5e;
+                            "
+                        >
+
+                            ❌ A API retornou um formato inválido.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            if (vales.length === 0) {
+
+                tbody.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            style="
+                                text-align:center;
+                                padding:30px;
+                                color:#64748b;
+                            "
+                        >
+
+                            🎉
+                            Nenhuma solicitação de vale pendente no momento.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            tbody.innerHTML = "";
+
+
+            vales.forEach(
+                function (vale) {
+
+                    montarLinhaVale(
+                        tbody,
+                        vale
+                    );
+
+                }
+            );
+
+
+            console.log(
+                `✅ ${vales.length} vale(s) exibido(s).`
+            );
+
+
+        } catch (erro) {
+
+            console.error(
+                "❌ Erro ao carregar vales pendentes:",
+                erro
+            );
+
+
+            tbody.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        style="
+                            text-align:center;
+                            padding:25px;
+                            color:#f43f5e;
+                        "
+                    >
+
+                        ❌
+                        Não foi possível carregar as solicitações.
+
+                        <br>
+
+                        <small
+                            style="
+                                color:#64748b;
+                                display:block;
+                                margin-top:6px;
+                            "
+                        >
+
+                            Verifique a conexão com o servidor.
+
+                        </small>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+
+    }
+
+
+    // ============================================================
+    // MONTAR LINHA
+    // ============================================================
+
+    function montarLinhaVale(
+        tbody,
+        vale
+    ) {
+
+        const id =
+            Number(vale.id);
+
+
+        const nome =
+            vale.funcionario_nome ||
+            vale.nome ||
+            vale.colaborador ||
+            "Nome não encontrado";
+
+
+        let dataFormatada =
+            "--/--/----";
+
+
+        if (vale.data_solicitacao) {
+
+            try {
+
+                dataFormatada =
+                    new Date(
+                        vale.data_solicitacao
+                    ).toLocaleDateString(
+                        "pt-BR"
+                    );
+
+            } catch {
+
+                dataFormatada =
+                    String(
+                        vale.data_solicitacao
+                    );
+
+            }
+
+        }
+
+
+        const valorNumerico =
+            Number(
+                String(
+                    vale.valor ?? 0
+                ).replace(",", ".")
+            );
+
+
+        const valorFormatado =
+            valorNumerico.toLocaleString(
+                "pt-BR",
+                {
+                    style: "currency",
+                    currency: "BRL"
+                }
+            );
+
+
+        const motivo =
+            vale.motivo ||
+            vale.justificativa ||
+            vale.resposta_rh ||
+            "--";
+
+
+        const pix =
+            vale.chave_pix ||
+            vale.pix ||
+            "Não cadastrada";
+
+
+        const telefone =
+            vale.funcionario_telefone ||
+            vale.telefone ||
+            vale.celular ||
+            "";
+
+
+        const tr =
+            document.createElement("tr");
+
+
+        tr.id =
+            `linha-vale-${id}`;
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <strong>
+                    ${escaparHTML(nome)}
+                </strong>
+
+            </td>
+
+
+            <td>
+                ${escaparHTML(dataFormatada)}
+            </td>
+
+
+            <td
+                style="
+                    color:#10b981;
+                    font-weight:bold;
+                "
+            >
+
+                ${escaparHTML(valorFormatado)}
+
+            </td>
+
+
+            <td>
+                ${escaparHTML(motivo)}
+            </td>
+
+
+            <td>
+                ${escaparHTML(pix)}
+            </td>
+
+
+            <td id="acoes-vale-${id}">
+
+                <button
+                    type="button"
+                    class="btn-vale btn-aprovar"
+                    onclick="aprovarValeRH(${id})"
+                >
+
+                    ✅ Aprovar
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="btn-vale btn-recusar"
+                    onclick="recusarValeRH(${id})"
+                >
+
+                    ❌ Recusar
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        tbody.appendChild(tr);
+
+    }
+
+
+    // ============================================================
+    // APROVAR VALE
+    // ============================================================
+
+    window.aprovarValeRH =
+        async function (id) {
+
+            const linha =
+                document.getElementById(
+                    `linha-vale-${id}`
+                );
+
+
+            if (!linha) {
+
+                alert(
+                    "Vale não encontrado na tela."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                const respostaBusca =
+                    await fetch(
+                        `${API_BASE}/vale/pendentes`,
+                        {
+                            method: "GET",
+                            cache: "no-store",
+                            headers: {
+                                "Accept":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                if (!respostaBusca.ok) {
+
+                    throw new Error(
+                        "Não foi possível localizar o vale."
+                    );
+
+                }
+
+
+                const lista =
+                    await respostaBusca.json();
+
+
+                const vale =
+                    lista.find(
+                        item =>
+                            Number(item.id) ===
+                            Number(id)
+                    );
+
+
+                if (!vale) {
+
+                    alert(
+                        "Esse vale não está mais pendente."
+                    );
+
+                    return;
+
+                }
+
+
+                const nome =
+                    vale.funcionario_nome ||
+                    vale.nome ||
+                    vale.colaborador ||
+                    "Colaborador";
+
+
+                const valorNumerico =
+                    Number(
+                        String(
+                            vale.valor ?? 0
+                        ).replace(",", ".")
+                    );
+
+
+                const valor =
+                    valorNumerico.toLocaleString(
+                        "pt-BR",
+                        {
+                            style: "currency",
+                            currency: "BRL"
+                        }
+                    );
+
+
+                const pix =
+                    vale.chave_pix ||
+                    vale.pix ||
+                    "Não cadastrada";
+
+
+                const telefone =
+                    vale.funcionario_telefone ||
+                    vale.telefone ||
+                    vale.celular ||
+                    "";
+
+
+                if (
+                    !confirm(
+                        `Aprovar o vale de ${valor} para ${nome}?`
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                const celula =
+                    document.getElementById(
+                        `acoes-vale-${id}`
+                    );
+
+
+                if (celula) {
+
+                    celula.innerHTML = `
+
+                        <span
+                            style="
+                                color:#64748b;
+                                font-size:12px;
+                                font-weight:bold;
+                            "
+                        >
+
+                            ⏳ Aprovando...
+
+                        </span>
+
+                    `;
+
+                }
+
+
+                // =================================================
+                // ENVIAR APROVAÇÃO
+                // =================================================
+
+                const resposta =
+                    await fetch(
+                        `${API_BASE}/vale/responder`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    vale_id:
+                                        id,
+
+                                    status:
+                                        "Aprovado"
+                                })
+                        }
+                    );
+
+
+                const texto =
+                    await resposta.text();
+
+
+                let dados = {};
+
+
+                try {
+
+                    dados =
+                        texto
+                            ? JSON.parse(texto)
+                            : {};
+
+                } catch {
+
+                    dados = {
+                        mensagem:
+                            texto
+                    };
+
+                }
+
+
+                if (!resposta.ok) {
+
+                    console.error(
+                        "Erro ao aprovar:",
+                        dados
+                    );
+
+
+                    if (celula) {
+
+                        celula.innerHTML = `
+
+                            <span
+                                style="
+                                    color:#f43f5e;
+                                    font-size:12px;
+                                    font-weight:bold;
+                                "
+                            >
+
+                                ❌ Erro ao aprovar
+
+                            </span>
+
+                            <br>
+
+                            <button
+                                type="button"
+                                class="btn-vale btn-aprovar"
+                                onclick="aprovarValeRH(${id})"
+                            >
+
+                                Tentar novamente
+
+                            </button>
+
+                        `;
+
                     }
 
-                    const celula = document.getElementById(`acoes-vale-${id}`);
-                    celula.innerHTML = `
-                        <span style="color: #10b981; font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px;">APROVADO</span>
-                        
-                        ${WPP_DONO 
-                            ? `<a href="${linkDono}" target="_blank" style="background-color: #25D366; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 2px; font-size: 12px; font-weight: bold;">📲 Notificar Financeiro</a>` 
-                            : `<span style="font-size: 10px; color: orange; display: block; margin-top: 2px;">Cadastre o tel. em Configurações</span>`}
-                        
-                        ${apenasNumColab 
-                            ? `<a href="${linkColab}" target="_blank" style="background-color: #38bdf8; color: white; text-decoration: none; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; font-size: 12px; font-weight: bold;">📱 Notificar Colab</a>` 
-                            : `<span style="font-size: 10px; color: #f43f5e; display: block; margin-top: 2px;">Sem tel. cadastrado</span>`}
-                    `;
-                } else {
-                    alert("Erro ao aprovar: " + (data.erro || "Desconhecido"));
+
+                    alert(
+                        "Erro ao aprovar: " +
+                        (
+                            dados.erro ||
+                            dados.mensagem ||
+                            `Erro HTTP ${resposta.status}`
+                        )
+                    );
+
+
+                    return;
+
                 }
-            } catch(e) { alert("Erro de conexão ao aprovar vale."); }
+
+
+                // =================================================
+                // MENSAGEM PARA O FINANCEIRO
+                // =================================================
+
+                const textoDono =
+                    "\u{1F389} *Novo Vale Aprovado pelo RH!* \u{1F389}\n\n" +
+                    "\u{1F464} *Colaborador:* " +
+                    nome +
+                    "\n" +
+                    "\u{1F4B8} *Valor:* " +
+                    valor +
+                    "\n" +
+                    "\u{1F511} *Chave PIX:* " +
+                    pix +
+                    "\n\n" +
+                    "\u{1F680} *Status:* Aguardando transferência financeira.";
+
+
+                // =================================================
+                // MENSAGEM PARA O COLABORADOR
+                // =================================================
+
+                const textoColab =
+                    "\u{1F973} *Oba, " +
+                    nome +
+                    "! Seu vale foi APROVADO!*\n\n" +
+                    "\u{1F4B0} *Valor:* " +
+                    valor +
+                    "\n" +
+                    "\u{1F4CC} *Forma de Envio:* PIX (" +
+                    pix +
+                    ")\n\n" +
+                    "O pagamento será realizado em breve. " +
+                    "Tenha um ótimo dia! \u{1F680}";
+
+
+                // =================================================
+                // LINK FINANCEIRO
+                // =================================================
+
+                const linkDono =
+                    criarLinkWhatsApp(
+                        WPP_DONO,
+                        textoDono
+                    );
+
+
+                // =================================================
+                // LINK COLABORADOR
+                // =================================================
+
+                const linkColab =
+                    criarLinkWhatsApp(
+                        telefone,
+                        textoColab
+                    );
+
+
+                // =================================================
+                // MOSTRAR BOTÕES
+                // =================================================
+
+                if (celula) {
+
+                    celula.innerHTML = `
+
+                        <span class="status-aprovado">
+
+                            ✅ VALE APROVADO
+
+                        </span>
+
+
+                        ${
+                            linkDono
+
+                                ? `
+
+                                    <button
+                                        type="button"
+                                        class="btn-whatsapp-financeiro"
+                                        onclick="abrirWhatsAppWeb(
+                                            '${escaparJS(WPP_DONO)}',
+                                            '${escaparJS(textoDono)}'
+                                        )"
+                                    >
+
+                                        📲
+                                        Enviar para Financeiro
+
+                                    </button>
+
+                                `
+
+                                : `
+
+                                    <span
+                                        class="mensagem-ajuda"
+                                        style="color:#f59e0b;"
+                                    >
+
+                                        ⚠️
+                                        Cadastre o telefone do financeiro.
+
+                                    </span>
+
+                                `
+                        }
+
+
+                        ${
+                            linkColab
+
+                                ? `
+
+                                    <button
+                                        type="button"
+                                        class="btn-whatsapp-colaborador"
+                                        onclick="abrirWhatsAppWeb(
+                                            '${escaparJS(telefone)}',
+                                            '${escaparJS(textoColab)}'
+                                        )"
+                                    >
+
+                                        📲
+                                        Enviar para Colaborador
+
+                                    </button>
+
+                                `
+
+                                : `
+
+                                    <span
+                                        class="mensagem-ajuda"
+                                        style="color:#f43f5e;"
+                                    >
+
+                                        ⚠️
+                                        Sem telefone cadastrado.
+
+                                    </span>
+
+                                `
+                        }
+
+
+                        <span
+                            class="mensagem-ajuda"
+                        >
+
+                            Os botões permanecem disponíveis
+                            até você enviar as mensagens.
+
+                        </span>
+
+                    `;
+
+                }
+
+
+                console.log(
+                    "✅ Vale aprovado com sucesso:",
+                    id
+                );
+
+
+            } catch (erro) {
+
+                console.error(
+                    "❌ Erro ao aprovar vale:",
+                    erro
+                );
+
+
+                const celula =
+                    document.getElementById(
+                        `acoes-vale-${id}`
+                    );
+
+
+                if (celula) {
+
+                    celula.innerHTML = `
+
+                        <span
+                            style="
+                                color:#f43f5e;
+                                font-size:12px;
+                                font-weight:bold;
+                            "
+                        >
+
+                            ❌ Erro de comunicação
+
+                        </span>
+
+                        <button
+                            type="button"
+                            class="btn-vale btn-aprovar"
+                            onclick="aprovarValeRH(${id})"
+                        >
+
+                            Tentar novamente
+
+                        </button>
+
+                    `;
+
+                }
+
+
+                alert(
+                    "Erro de conexão ao aprovar vale.\n\n" +
+                    erro.message
+                );
+
+            }
+
         };
 
-        // 4. Ação de Recusa com Motivo Obrigatório
-        window.recusarValeRH = async function(id) {
-            const motivo = prompt("Motivo da recusa (obrigatório para o funcionário ver):");
-            
-            if (motivo === null || motivo.trim() === "") {
-                alert("Ação cancelada: É obrigatório informar um motivo ao recusar o vale.");
+
+    // ============================================================
+    // RECUSAR VALE
+    // ============================================================
+
+    window.recusarValeRH =
+        async function (id) {
+
+            const motivo =
+                prompt(
+                    "Motivo da recusa (obrigatório para o funcionário ver):"
+                );
+
+
+            if (
+                motivo === null ||
+                motivo.trim() === ""
+            ) {
+
+                alert(
+                    "⚠️ Ação cancelada: é obrigatório informar um motivo."
+                );
+
                 return;
+
             }
+
 
             try {
-                const res = await fetch(`${URL_API}/vale/responder`, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        vale_id: id, 
-                        status: 'Recusado',
-                        resposta_rh: motivo 
-                    })
-                });
-                
-                if(res.ok) {
-                    document.getElementById(`linha-vale-${id}`).remove();
-                } else {
-                    const data = await res.json();
-                    alert("Erro ao recusar: " + (data.erro || "Erro desconhecido"));
+
+                const resposta =
+                    await fetch(
+                        `${API_BASE}/vale/responder`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    vale_id:
+                                        id,
+
+                                    status:
+                                        "Recusado",
+
+                                    resposta_rh:
+                                        motivo.trim()
+                                })
+                        }
+                    );
+
+
+                const texto =
+                    await resposta.text();
+
+
+                let dados = {};
+
+
+                try {
+
+                    dados =
+                        texto
+                            ? JSON.parse(texto)
+                            : {};
+
+                } catch {
+
+                    dados = {
+                        mensagem:
+                            texto
+                    };
+
                 }
-            } catch(e) { 
-                alert("Erro ao recusar. Verifique a conexão."); 
+
+
+                if (!resposta.ok) {
+
+                    alert(
+                        "Erro ao recusar: " +
+                        (
+                            dados.erro ||
+                            dados.mensagem ||
+                            "Erro desconhecido"
+                        )
+                    );
+
+                    return;
+
+                }
+
+
+                const linha =
+                    document.getElementById(
+                        `linha-vale-${id}`
+                    );
+
+
+                if (linha) {
+
+                    linha.remove();
+
+                }
+
+
+                const tbody =
+                    obterTabela();
+
+
+                if (
+                    tbody &&
+                    tbody.children.length === 0
+                ) {
+
+                    tbody.innerHTML = `
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                style="
+                                    text-align:center;
+                                    padding:30px;
+                                    color:#64748b;
+                                "
+                            >
+
+                                🎉
+                                Nenhuma solicitação de vale pendente no momento.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+
+
+                console.log(
+                    "✅ Vale recusado:",
+                    id
+                );
+
+
+            } catch (erro) {
+
+                console.error(
+                    "❌ Erro ao recusar vale:",
+                    erro
+                );
+
+
+                alert(
+                    "Erro ao recusar.\n\n" +
+                    "Verifique a conexão com o servidor."
+                );
+
             }
+
         };
 
-        carregarWhatsappFinanceiro().then(() => {
-            carregarValesPendentes();
-        });
-    })();
+
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
+
+    async function iniciarTelaVales() {
+
+        console.log(
+            "🚀 Inicializando Gestão de Vales"
+        );
+
+
+        console.log(
+            "🌐 API:",
+            API_BASE
+        );
+
+
+        await carregarWhatsappFinanceiro();
+
+
+        await carregarValesPendentes();
+
+    }
+
+
+    // ============================================================
+    // INICIALIZAÇÃO SEGURA
+    // ============================================================
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciarTelaVales,
+            {
+                once: true
+            }
+        );
+
+    } else {
+
+        iniciarTelaVales();
+
+    }
+
+
+})();
+
 </script>
-<script src="../js/gestao_vales.js"></script>
+
+</body>
+
+</html>

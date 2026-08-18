@@ -8,7 +8,6 @@ const pool = require('../db'); // Conexão com o PostgreSQL
 
 // Receber uma nova solicitação/ajuste/atestado do aplicativo
 router.post('/solicitacoes', async (req, res) => {
-    // Agora o backend recebe o anexo_url (que será a foto em Base64)
     const { funcionario_id, tipo_solicitacao, data_registro, horario_exato, justificativa, anexo_url } = req.body;
 
     try {
@@ -65,54 +64,50 @@ router.get('/solicitacoes/funcionario/:id', async (req, res) => {
 router.get('/solicitacoes/pendentes', async (req, res) => {
     try {
         const query = `
-            SELECT 
-                s.*, 
-                f.nome AS funcionario_nome, 
-                f.cpf
+            SELECT s.*, f.nome AS funcionario_nome, f.cpf
             FROM solicitacoes_ponto s
             JOIN funcionarios f ON f.id = s.funcionario_id
-            WHERE s.status = 'Pendente'
-            ORDER BY s.criado_em DESC;
+            WHERE s.status = 'Pendente' ORDER BY s.criado_em DESC;
         `;
         const resultado = await pool.query(query);
         const solicitacoes = resultado.rows;
 
-        // CRUZA OS DADOS: Busca o horário original que o funcionário bateu para comparação
         for (let sol of solicitacoes) {
             if (sol.tipo_solicitacao === 'AJUSTE') {
                 let tipoBatida = '';
                 if (sol.justificativa && sol.justificativa.includes(']')) {
-                    const tipo = sol.justificativa.split(']')[0].replace('[', '');
-                    if (tipo === 'ENTRADA') tipoBatida = 'Entrada';
-                    else if (tipo === 'SAIDA_ALMOCO') tipoBatida = 'Saída Almoço';
-                    else if (tipo === 'RETORNO_ALMOCO') tipoBatida = 'Volta Almoço';
-                    else if (tipo === 'SAIDA') tipoBatida = 'Saída';
+                    const tipo = sol.justificativa.split(']')[0].replace('[', ''); 
+                    if (['ENTRADA', 'SAIDA_ALMOCO', 'RETORNO_ALMOCO', 'SAIDA'].includes(tipo)) tipoBatida = tipo;
                 }
 
                 if (tipoBatida) {
+                    // Busca TODAS as batidas do dia para exibir no painel!
                     const queryPonto = `
                         SELECT data_hora FROM registros_ponto
-                        WHERE funcionario_id = $1 AND data_registro = $2 AND tipo_registro = $3
-                        LIMIT 1
+                        WHERE funcionario_id = $1 AND DATE(data_hora AT TIME ZONE 'UTC' AT TIME ZONE 'INTERVAL ''-4:00''') = DATE($2) 
+                        ORDER BY data_hora ASC
                     `;
-                    const resPonto = await pool.query(queryPonto, [sol.funcionario_id, sol.data_registro, tipoBatida]);
+                    const resPonto = await pool.query(queryPonto, [sol.funcionario_id, sol.data_registro]);
 
                     if (resPonto.rows.length > 0) {
-                        const dataObj = new Date(resPonto.rows[0].data_hora);
-                        sol.horario_original = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                        const listaHoras = resPonto.rows.map(row => {
+                            const d = new Date(row.data_hora);
+                            let h = d.getUTCHours() - 4; if (h < 0) h += 24;
+                            return `${String(h).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+                        });
+                        sol.horario_original = listaHoras.join(' | ');
                     } else {
-                        sol.horario_original = 'Sem registro prévio (Esquecimento)';
+                        sol.horario_original = 'Sem registros neste dia';
                     }
                 } else {
                     sol.horario_original = 'Não identificado';
                 }
             }
         }
-
         res.json(solicitacoes);
     } catch (erro) {
-        console.error("Erro ao buscar solicitações pendentes:", erro);
-        res.status(500).json({ erro: "Erro interno ao buscar solicitações." });
+        console.error("Erro ao buscar solicitações:", erro);
+        res.status(500).json({ erro: "Erro interno." });
     }
 });
 
@@ -121,7 +116,7 @@ router.post('/solicitacoes/responder', async (req, res) => {
     const { solicitacao_id, status, resposta_rh } = req.body; 
 
     if (!solicitacao_id || !['Aprovado', 'Recusado'].includes(status)) {
-        return res.status(400).json({ erro: "Dados inválidos para resposta." });
+        return res.status(400).json({ erro: "Dados inválidos." });
     }
 
     const client = await pool.connect();
@@ -129,13 +124,7 @@ router.post('/solicitacoes/responder', async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Atualiza o status da solicitação
-        const updateSolicitacao = `
-            UPDATE solicitacoes_ponto 
-            SET status = $1, resposta_rh = $2, atualizado_em = NOW()
-            WHERE id = $3
-            RETURNING *;
-        `;
+        const updateSolicitacao = `UPDATE solicitacoes_ponto SET status = $1, resposta_rh = $2, atualizado_em = NOW() WHERE id = $3 RETURNING *;`;
         const resSolicitacao = await client.query(updateSolicitacao, [status, resposta_rh || null, solicitacao_id]);
 
         if (resSolicitacao.rows.length === 0) {
@@ -145,36 +134,49 @@ router.post('/solicitacoes/responder', async (req, res) => {
 
         const sol = resSolicitacao.rows[0];
 
-        // 2. Se aprovado, insere/substitui os horários na tabela registros_ponto
         if (status === 'Aprovado') {
-            if (sol.hora_entrada || sol.hora_saida || sol.hora_saida_almoco || sol.hora_volta_almoco) {
-                // Formatação segura de data
-                const dataRegStr = new Date(sol.data_registro).toISOString().split('T')[0];
-                const formatarDataHora = (hora) => `${dataRegStr} ${hora}`;
+            const dataRegStr = new Date(sol.data_registro).toISOString().split('T')[0];
+            
+            const formatarDataHoraUTC = (horaStr) => {
+                // A TESOURA ✂️: Corta os segundos extras (ex: 11:40:00 vira 11:40) para não dar erro 500!
+                const horaLimpa = horaStr.substring(0, 5); 
+                return new Date(`${dataRegStr}T${horaLimpa}:00-04:00`).toISOString();
+            };
 
-                const insertQuery = `
-                    INSERT INTO registros_ponto 
-                    (funcionario_id, data_registro, data_hora, tipo_registro, origem, status_validacao, observacao) 
-                    VALUES ($1, $2, $3, $4, 'Ajuste Aprovado RH', 'Aprovado', $5)
-                `;
+            async function processarAjuste(horaNova, tipoBatida) {
+                if (!horaNova) return;
 
-                if (sol.hora_entrada) {
-                    await client.query('DELETE FROM registros_ponto WHERE funcionario_id = $1 AND data_registro = $2 AND tipo_registro = $3', [sol.funcionario_id, sol.data_registro, 'Entrada']);
-                    await client.query(insertQuery, [sol.funcionario_id, sol.data_registro, formatarDataHora(sol.hora_entrada), 'Entrada', sol.justificativa]);
+                // 1. Verifica se já tem 4 batidas (se tiver, é substituição e apaga a velha)
+                const countQuery = await client.query(`
+                    SELECT id FROM registros_ponto 
+                    WHERE funcionario_id = $1 AND DATE(data_hora AT TIME ZONE 'UTC' AT TIME ZONE 'INTERVAL ''-4:00''') = DATE($2)
+                `, [sol.funcionario_id, dataRegStr]);
+
+                if (countQuery.rows.length >= 4) {
+                    await client.query(`DELETE FROM registros_ponto WHERE funcionario_id = $1 AND DATE(data_hora AT TIME ZONE 'UTC' AT TIME ZONE 'INTERVAL ''-4:00''') = DATE($2) AND tipo = $3`, [sol.funcionario_id, dataRegStr, tipoBatida]);
                 }
-                if (sol.hora_saida_almoco) {
-                    await client.query('DELETE FROM registros_ponto WHERE funcionario_id = $1 AND data_registro = $2 AND tipo_registro = $3', [sol.funcionario_id, sol.data_registro, 'Saída Almoço']);
-                    await client.query(insertQuery, [sol.funcionario_id, sol.data_registro, formatarDataHora(sol.hora_saida_almoco), 'Saída Almoço', sol.justificativa]);
-                }
-                if (sol.hora_volta_almoco) {
-                    await client.query('DELETE FROM registros_ponto WHERE funcionario_id = $1 AND data_registro = $2 AND tipo_registro = $3', [sol.funcionario_id, sol.data_registro, 'Volta Almoço']);
-                    await client.query(insertQuery, [sol.funcionario_id, sol.data_registro, formatarDataHora(sol.hora_volta_almoco), 'Volta Almoço', sol.justificativa]);
-                }
-                if (sol.hora_saida) {
-                    await client.query('DELETE FROM registros_ponto WHERE funcionario_id = $1 AND data_registro = $2 AND tipo_registro = $3', [sol.funcionario_id, sol.data_registro, 'Saída']);
-                    await client.query(insertQuery, [sol.funcionario_id, sol.data_registro, formatarDataHora(sol.hora_saida), 'Saída', sol.justificativa]);
+
+                // 2. Insere a batida nova com o fuso blindado
+                const insertQuery = `INSERT INTO registros_ponto (funcionario_id, data_hora, tipo, origem, status_validacao, observacao) VALUES ($1, $2, $3, 'Ajuste RH', 'Aprovado', $4)`;
+                await client.query(insertQuery, [sol.funcionario_id, formatarDataHoraUTC(horaNova), tipoBatida, sol.justificativa]);
+
+                // 3. MOTOR DE AUTO-CURA (Pega todas as batidas e organiza as nomenclaturas)
+                const buscaBatidas = await client.query(`
+                    SELECT id FROM registros_ponto WHERE funcionario_id = $1 AND DATE(data_hora AT TIME ZONE 'UTC' AT TIME ZONE 'INTERVAL ''-4:00''') = DATE($2) ORDER BY data_hora ASC
+                `, [sol.funcionario_id, dataRegStr]);
+
+                const tiposCorretos = ['ENTRADA', 'SAIDA_ALMOCO', 'RETORNO_ALMOCO', 'SAIDA'];
+                for (let i = 0; i < buscaBatidas.rows.length; i++) {
+                    if (i < 4) {
+                        await client.query(`UPDATE registros_ponto SET tipo = $1 WHERE id = $2`, [tiposCorretos[i], buscaBatidas.rows[i].id]);
+                    }
                 }
             }
+
+            await processarAjuste(sol.hora_entrada, 'ENTRADA');
+            await processarAjuste(sol.hora_saida_almoco, 'SAIDA_ALMOCO');
+            await processarAjuste(sol.hora_volta_almoco, 'RETORNO_ALMOCO');
+            await processarAjuste(sol.hora_saida, 'SAIDA');
         }
 
         await client.query('COMMIT');
@@ -182,7 +184,7 @@ router.post('/solicitacoes/responder', async (req, res) => {
 
     } catch (erro) {
         await client.query('ROLLBACK');
-        console.error("Erro ao responder solicitação:", erro);
+        console.error("Erro ao responder:", erro);
         res.status(500).json({ erro: "Erro ao processar resposta da solicitação." });
     } finally {
         client.release();
@@ -256,5 +258,54 @@ router.post('/notificacoes/criar', async (req, res) => {
         res.status(500).json({ erro: "Erro ao enviar notificação." });
     }
 });
+// ==========================================
+// 5. AJUSTE MANUAL DIRETO PELO RH (MODO DEUS)
+// ==========================================
+router.post('/ajuste-manual', async (req, res) => {
+    const { funcionario_id, data, batidas } = req.body; 
 
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // Converte a data DD/MM/YYYY para YYYY-MM-DD
+        const partesData = data.split('/');
+        const dataIsoStr = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+
+        // 1. Apaga TUDO que tiver daquele funcionário naquele dia (Limpa a bagunça)
+        await client.query(`
+            DELETE FROM registros_ponto 
+            WHERE funcionario_id = $1 
+            AND DATE(data_hora AT TIME ZONE 'America/Cuiaba') = $2
+        `, [funcionario_id, dataIsoStr]);
+
+        // 2. Função para inserir a batida limpinha no fuso de Cuiabá
+        const inserir = async (hora, tipo) => {
+            if (!hora || hora === '--:--' || hora === '') return;
+            
+            const dataHoraBd = new Date(`${dataIsoStr}T${hora}:00-04:00`).toISOString();
+            
+            await client.query(`
+                INSERT INTO registros_ponto (funcionario_id, data_hora, tipo, origem, status_validacao, observacao) 
+                VALUES ($1, $2, $3, 'RH Manual', 'Aprovado', 'Ajuste manual realizado pelo RH')
+            `, [funcionario_id, dataHoraBd, tipo]);
+        };
+
+        // 3. Insere só o que o RH preencheu na janelinha
+        await inserir(batidas.b1, 'ENTRADA');
+        await inserir(batidas.b2, 'SAIDA_ALMOCO');
+        await inserir(batidas.b3, 'RETORNO_ALMOCO');
+        await inserir(batidas.b4, 'SAIDA');
+
+        await client.query('COMMIT');
+        res.json({ sucesso: true, mensagem: "Batidas do dia atualizadas com sucesso!" });
+
+    } catch (erro) {
+        await client.query('ROLLBACK');
+        console.error("Erro no ajuste manual do RH:", erro);
+        res.status(500).json({ erro: "Erro ao salvar o ajuste manual." });
+    } finally {
+        client.release();
+    }
+});
 module.exports = router;
